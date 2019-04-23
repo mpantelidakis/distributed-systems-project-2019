@@ -24,7 +24,7 @@ urlpatterns = [
 
     # any url of the form below is passed to user.urls
     path('api/user/', include('user.urls')),
-    path('api/recipe/', include('recipe.urls')),
+    path('api/gallery/', include('gallery.urls')),
 
     # add url for our media files
     # by default the django devenlopment server

@@ -5,12 +5,17 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Tag, Recipe
+from core.models import Tag, UploadedImage, Gallery
 
-from recipe.serializers import TagSerializer
+from gallery.serializers import TagSerializer
 
 
-TAGS_URL = reverse('recipe:tag-list')
+TAGS_URL = reverse('gallery:tag-list')
+
+
+def sample_gallery(user, title='NiceG'):
+    """Create and return a sample gallery"""
+    return Gallery.objects.create(user=user, title=title)
 
 
 class PublicTagsApiTest(TestCase):
@@ -84,16 +89,16 @@ class PrivateTagsApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_retrieve_tags_assigned_to_recipes(self):
-        """Test filtering tags by those assigned to recipes"""
-        tag1 = Tag.objects.create(user=self.user, name='Breakfast')
-        tag2 = Tag.objects.create(user=self.user, name='Lunch')
-        recipe = Recipe.objects.create(
-            title='Coriander eggs on toast',
-            time_minutes=10,
-            price=5.00,
+        """Test filtering tags by those assigned to images"""
+        gallery = sample_gallery(self.user)
+        tag1 = Tag.objects.create(user=self.user, name='Sunny')
+        tag2 = Tag.objects.create(user=self.user, name='Cloudy')
+        u_img = UploadedImage.objects.create(
+            gallery=gallery,
+            name='Sunrise',
             user=self.user
         )
-        recipe.tags.add(tag1)
+        u_img.tags.add(tag1)
         res = self.client.get(TAGS_URL, {'assigned_only': 1})
 
         # serialize the created tags to verify if they are cointeined
@@ -105,25 +110,24 @@ class PrivateTagsApiTests(TestCase):
         self.assertNotIn(serializer2.data, res.data)
 
     # we need to return a distinct set of results
-    # if a tag is assigned to multiple recipes, we want it to return once
+    # if a tag is assigned to multiple images, we want it to return once
     def test_retrieve_tags_assigned_unique(self):
         """Test filtering tags by assigned returns unique items"""
-        tag = Tag.objects.create(user=self.user, name='Breakfast')
-        Tag.objects.create(user=self.user, name='Lunch')
-        recipe1 = Recipe.objects.create(
-            title='Pancakes',
-            time_minutes=5,
-            price=3.00,
+        gallery = sample_gallery(self.user)
+        tag = Tag.objects.create(user=self.user, name='Winter')
+        Tag.objects.create(user=self.user, name='Autumn')
+        u_img1 = UploadedImage.objects.create(
+            gallery=gallery,
+            name='Flowers',
             user=self.user
         )
-        recipe1.tags.add(tag)
-        recipe2 = Recipe.objects.create(
-            title='Porridge',
-            time_minutes=3,
-            price=2.00,
+        u_img1.tags.add(tag)
+        u_img2 = UploadedImage.objects.create(
+            gallery=gallery,
+            name='grassland',
             user=self.user
         )
-        recipe2.tags.add(tag)
+        u_img2.tags.add(tag)
 
         res = self.client.get(TAGS_URL, {'assigned_only': 1})
 

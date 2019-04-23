@@ -4,9 +4,9 @@ from rest_framework import viewsets, mixins, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models import Tag, Ingredient, Recipe
+from core.models import Tag, UploadedImage, Gallery
 
-from recipe import serializers
+from gallery import serializers
 
 
 class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
@@ -25,10 +25,10 @@ class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
         )
         queryset = self.queryset
         if assigned_only:
-            # this checks if FK recipe of an ingredient or
-            # tag is null, so it returns only tags/ingredients
-            # that are assigned to recipes
-            queryset = queryset.filter(recipe__isnull=False)
+            # this checks if FK image of a tag is null,
+            # so it returns only tags
+            # that are assigned to images
+            queryset = queryset.filter(uploadedimage__isnull=False)
 
         return queryset.filter(
             user=self.request.user
@@ -45,16 +45,16 @@ class TagViewSet(BaseRecipeAttrViewSet):
     serializer_class = serializers.TagSerializer
 
 
-class IngredientViewSet(BaseRecipeAttrViewSet):
+class UploadedImageViewSet(BaseRecipeAttrViewSet):
     """Manage ingredients in the database"""
-    queryset = Ingredient.objects.all()
-    serializer_class = serializers.IngredientSerializer
+    queryset = UploadedImage.objects.all()
+    serializer_class = serializers.UploadedImageSerializer
 
 
-class RecipeViewSet(viewsets.ModelViewSet):
+class GalleryViewSet(viewsets.ModelViewSet):
     """Manage recipes in the database"""
-    serializer_class = serializers.RecipeSerializer
-    queryset = Recipe.objects.all()
+    serializer_class = serializers.GallerySerializer
+    queryset = Gallery.objects.all()
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 

@@ -58,23 +58,27 @@ class ModelTests(TestCase):
 
         self.assertEqual(str(tag), tag.name)
 
-    def test_ingredient_str(self):
-        """Test the ingredient string representation"""
-        ingredient = models.Ingredient.objects.create(
-            user=sample_user(),
-            name='Cucumber'
+    def test_image_str(self):
+        """Test the image string representation"""
+        user = sample_user()
+        gallery = models.Gallery.objects.create(
+            user=user,
+            title='Summer'
         )
-        self.assertEqual(str(ingredient), ingredient.name)
+        image = models.UploadedImage.objects.create(
+            user=user,
+            gallery=gallery,
+            name='niceImage'
+        )
+        self.assertEqual(str(image), image.name)
 
-    def test_recipe_str(self):
-        """Test the recipe string representation"""
-        recipe = models.Recipe.objects.create(
+    def test_gallery_str(self):
+        """Test the gallery string representation"""
+        gallery = models.Gallery.objects.create(
             user=sample_user(),
-            title='Pastitsio',
-            time_minutes=40,
-            price=12.00
+            title='Summer'
         )
-        self.assertEqual(str(recipe), recipe.title)
+        self.assertEqual(str(gallery), gallery.title)
 
     # uuid4 is a function inside the uuid module
     # that generates a unique uuid version 4
@@ -92,8 +96,8 @@ class ModelTests(TestCase):
         # The reason we pass the second param is that we want to keep
         # the file extension as it is but we are going to replace the
         # first part 'myimage' with the uuid
-        file_path = models.recipe_image_file_path(None, 'myimage.jpg')
+        file_path = models.image_file_path(None, 'myimage.jpg')
 
         # f string, can have variables
-        exp_path = f'uploads/recipe/{uuid}.jpg'
+        exp_path = f'uploads/gallery/{uuid}.jpg'
         self.assertEqual(file_path, exp_path)

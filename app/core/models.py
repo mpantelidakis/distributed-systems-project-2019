@@ -9,7 +9,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
 from django.conf import settings
 
 
-def recipe_image_file_path(instance, filename):
+def image_file_path(instance, filename):
     """Generate file path for new image"""
     # Returns the last item after the split, the extension in our case
     ext = filename.split('.')[-1]
@@ -17,7 +17,7 @@ def recipe_image_file_path(instance, filename):
 
     # helper function that allows us to reliably join
     # 2 strings together to create a valid path
-    return os.path.join('uploads/recipe', filename)
+    return os.path.join('uploads/gallery', filename)
 
 
 class UserManager(BaseUserManager):
@@ -78,34 +78,33 @@ class Tag(models.Model):
         return self.name
 
 
-class Ingredient(models.Model):
+class UploadedImage(models.Model):
     """Ingredient to be used in a recipe"""
+    gallery = models.ForeignKey(
+        'Gallery',
+        related_name='images',
+        on_delete=models.CASCADE
+    )
     name = models.CharField(max_length=255)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
+    tags = models.ManyToManyField('Tag')
+    image = models.ImageField(null=True, upload_to=image_file_path)
 
     # define the string representation of the model
     def __str__(self):
         return self.name
 
 
-class Recipe(models.Model):
+class Gallery(models.Model):
     """Recipe object"""
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
     title = models.CharField(max_length=255)
-    time_minutes = models.IntegerField()
-    price = models.DecimalField(max_digits=5, decimal_places=2)
-    # the user can provide a link to the recipe
-    # blank=True for optional fields
-    link = models.CharField(max_length=255, blank=True)
-    ingredients = models.ManyToManyField('Ingredient')
-    tags = models.ManyToManyField('Tag')
-    image = models.ImageField(null=True, upload_to=recipe_image_file_path)
 
     # define the string representation of the model
     def __str__(self):

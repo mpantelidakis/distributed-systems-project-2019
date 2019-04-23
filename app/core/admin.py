@@ -45,6 +45,6 @@ admin.site.register(models.User, UserAdmin)
 # register the tag model to the admin
 admin.site.register(models.Tag)
 # register the Ingredient model to the admin
-admin.site.register(models.Ingredient)
+# admin.site.register(models.Ingredient)
 # register the Recipe model to the admin
-admin.site.register(models.Recipe)
+# admin.site.register(models.Recipe)
