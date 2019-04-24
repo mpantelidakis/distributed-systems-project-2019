@@ -18,22 +18,22 @@ class UserSerializer(serializers.ModelSerializer):
         # is 5 characters
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
 
-        def create(self, validated_data):
-            """Creates a new user with encrypted password and return it"""
-            return get_user_model().objects.create_user(**validated_data)
+    def create(self, validated_data):
+        """Creates a new user with encrypted password and return it"""
+        return get_user_model().objects.create_user(**validated_data)
 
-        def update(self, instance, validated_data):
-            """Update a user,setting the password correctly and return it"""
-            password = validated_data.pop('password', None)
-            # super will make use of the default update function
-            # which we extend here
-            user = super().update(instance, validated_data)
+    def update(self, instance, validated_data):
+        """Update a user,setting the password correctly and return it"""
+        password = validated_data.pop('password', None)
+        # super will make use of the default update function
+        # which we extend here
+        user = super().update(instance, validated_data)
 
-            if password:
-                user.set_password(password)
-                user.save()
+        if password:
+            user.set_password(password)
+            user.save()
 
-            return user
+        return user
 
 
 class AuthTokenSerializer(serializers.Serializer):

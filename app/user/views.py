@@ -9,15 +9,6 @@ class CreateUserView(generics.CreateAPIView):
     """Create a new user in the system"""
     serializer_class = UserSerializer
 
-    # If this function isn't overriden
-    # passwords are not hashed in the db
-    # TODO find out why overriding perform_create is needed
-    # Maybe use self._db inside save function
-    def perform_create(self, serializer):
-        instance = serializer.save()
-        instance.set_password(instance.password)
-        instance.save()
-
 
 class CreateTokenView(ObtainAuthToken):
     """Create a new auth token for the user"""
@@ -45,8 +36,3 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
         # that takes care of taking the authenticated user and
         # assigning him/her to the request
         return self.request.user
-
-    def perform_update(self, serializer):
-        instance = serializer.save()
-        instance.set_password(instance.password)
-        instance.save()

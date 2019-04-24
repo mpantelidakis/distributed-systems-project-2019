@@ -41,6 +41,8 @@ class UploadedImageSerializer(serializers.ModelSerializer):
 class GallerySerializer(serializers.ModelSerializer):
     """Serializer for gallery objects"""
 
+    # TODO add images field here and populate it with
+    # gallery.images (images is the related_name) of the fk
     class Meta:
         model = Gallery
         fields = ('id', 'title')
