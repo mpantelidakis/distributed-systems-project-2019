@@ -45,14 +45,39 @@ class TagViewSet(BaseRecipeAttrViewSet):
     serializer_class = serializers.TagSerializer
 
 
-class UploadedImageViewSet(BaseRecipeAttrViewSet):
-    """Manage ingredients in the database"""
+class DisplayImagesViewSet(viewsets.GenericViewSet,
+                           mixins.ListModelMixin):
+    """Display images in the database"""
     queryset = UploadedImage.objects.all()
-    serializer_class = serializers.UploadedImageSerializer
+    serializer_class = serializers.ImageSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        """Return objects for the current authenticated user only"""
+        return self.queryset.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        """Create a new object"""
+        serializer.save(user=self.request.user)
+
+
+class UploadImageViewSet(viewsets.GenericViewSet,
+                           mixins.CreateModelMixin):
+    """Upload an image in the database"""
+    queryset = UploadedImage.objects.all()
+    serializer_class = serializers.UploadNewImageSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+
+    def perform_create(self, serializer):
+        """Create a new object"""
+        serializer.save(user=self.request.user)
 
 
 class GalleryViewSet(viewsets.ModelViewSet):
-    """Manage recipes in the database"""
+    """Manage galleries in the database"""
     serializer_class = serializers.GallerySerializer
     queryset = Gallery.objects.all()
     authentication_classes = (TokenAuthentication,)
@@ -90,9 +115,9 @@ class GalleryViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Return appropriate serializer class"""
         if self.action == 'retrieve':
-            return serializers.RecipeDetailSerializer
-        elif self.action == 'upload_image':
-            return serializers.RecipeImageSerializer
+            return serializers.GalleryDetailSerializer
+        elif self.action == 'custom_action':
+            return serializers.GalleryCustomSerializer
 
         return self.serializer_class
 
@@ -103,11 +128,11 @@ class GalleryViewSet(viewsets.ModelViewSet):
     # custom action, detail=True makes action available for a specific recipe
     # that has been already created
     @action(methods=['POST'], detail=True, url_path='upload-image')
-    def upload_image(self, request, pk=None):
+    def custom_action(self, request, pk=None):
         """Upload an image to a recipe"""
-        recipe = self.get_object()
+        gallery = self.get_object()
         serializer = self.get_serializer(
-            recipe,
+            gallery,
             data=request.data
         )
         if serializer.is_valid():

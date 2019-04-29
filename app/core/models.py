@@ -88,7 +88,10 @@ class UploadedImage(models.Model):
     name = models.CharField(max_length=255)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE
+
+        # when a user is deleted, we also delete all the tags
+        # that he/she has created
+        on_delete=models.CASCADE,
     )
     tags = models.ManyToManyField('Tag')
     image = models.ImageField(null=True, upload_to=image_file_path)
@@ -104,8 +107,8 @@ class Gallery(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
-    title = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
 
     # define the string representation of the model
     def __str__(self):
-        return self.title
+        return self.name

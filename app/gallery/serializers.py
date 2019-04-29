@@ -12,8 +12,16 @@ class TagSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
 
-class UploadedImageSerializer(serializers.ModelSerializer):
+class ImageSerializer(serializers.ModelSerializer):
     """Serializer for image objects"""
+
+    class Meta:
+        model = UploadedImage
+        fields = ('id', 'name', 'tags', 'image',)
+        read_only_fields = ('id', 'name', 'tags', 'image',)
+
+class UploadNewImageSerializer(ImageSerializer):
+    """Serializer for uploading new images"""
 
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -24,9 +32,10 @@ class UploadedImageSerializer(serializers.ModelSerializer):
         queryset=Gallery.objects.all()
     )
 
+
     # overriding __init__ to filter galleries
     def __init__(self, *args, **kwargs):
-        super(UploadedImageSerializer, self).__init__(*args, **kwargs)
+        super(UploadNewImageSerializer, self).__init__(*args, **kwargs)
         request_user = self.context['request'].user
         self.fields['gallery'].queryset = Gallery.objects.filter(
                                                     user=request_user
@@ -34,16 +43,16 @@ class UploadedImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UploadedImage
-        fields = ('id', 'name', 'tags', 'gallery', 'image')
+        fields = ('id', 'name', 'tags', 'gallery', 'image',)
         read_only_fields = ('id',)
 
 
 class GallerySerializer(serializers.ModelSerializer):
     """Serializer for gallery objects"""
 
-    # images = UploadedImageSerializer(many=True, read_only=True)
+    images = ImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Gallery
-        fields = ('id', 'title', 'images')
-        read_only_fields = ('id',)
+        fields = ('id', 'name', 'images')
+        read_only_fields = ('id', 'images')
