@@ -20,11 +20,11 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
+    path('', include('frontend.urls')),
     path('admin/', admin.site.urls),
-
-    # any url of the form below is passed to user.urls
     path('api/user/', include('user.urls')),
     path('api/gallery/', include('gallery.urls')),
+    
 
     # add url for our media files
     # by default the django devenlopment server

@@ -30,3 +30,9 @@ services:
       - POSTGRES_USER=postgres
       # TODO change this with an encrypted password for production
       - POSTGRES_PASSWORD=supersecretpassword
+    volumes:
+      - my-datavolume:/var/lib/postgresql/data
+
+
+volumes:
+  my-datavolume:

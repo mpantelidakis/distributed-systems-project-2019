@@ -102,7 +102,7 @@ class UploadedImage(models.Model):
 
 
 class Gallery(models.Model):
-    """Recipe object"""
+    """Gallery object"""
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE

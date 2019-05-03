@@ -9,7 +9,7 @@ from core.models import Tag, UploadedImage, Gallery
 from gallery import serializers
 
 
-class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
+class BaseTagAttrViewSet(viewsets.GenericViewSet,
                             mixins.ListModelMixin,
                             mixins.CreateModelMixin):
     """Base viewset for user owned recipe attributes"""
@@ -20,6 +20,8 @@ class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
     # to filter returned objects
     def get_queryset(self):
         """Return objects for the current authenticated user only"""
+
+        # filtering for tags assigned on images
         assigned_only = bool(
             int(self.request.query_params.get('assigned_only', 0))
         )
@@ -39,7 +41,7 @@ class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
         serializer.save(user=self.request.user)
 
 
-class TagViewSet(BaseRecipeAttrViewSet):
+class TagViewSet(BaseTagAttrViewSet):
     """Manage tags in the database"""
     queryset = Tag.objects.all()
     serializer_class = serializers.TagSerializer
@@ -53,8 +55,24 @@ class DisplayImagesViewSet(viewsets.GenericViewSet,
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    def _params_to_ints(self, qs):
+        """Convert a list of string IDs to a list of integers"""
+        return [int(str_id) for str_id in qs.split(',')]
+    
     def get_queryset(self):
         """Return objects for the current authenticated user only"""
+
+        # filter queryset using tags if provided as an arg in the get request
+        queryset = self.queryset
+        tags = self.request.query_params.get('tags')
+        if tags:
+            tags_ids = self._params_to_ints(tags)
+            # tags__id__in : Django synstax for filtering on foreign keys
+            # filter by ID on the remote table
+            # in: function. Return all the tags which have their ID inside
+            # the list tags_ids
+            queryset = queryset.filter(tags__id__in=tags_ids)
+
         return self.queryset.filter(user=self.request.user)
 
     def perform_create(self, serializer):
@@ -63,7 +81,7 @@ class DisplayImagesViewSet(viewsets.GenericViewSet,
 
 
 class UploadImageViewSet(viewsets.GenericViewSet,
-                           mixins.CreateModelMixin):
+                         mixins.CreateModelMixin):
     """Upload an image in the database"""
     queryset = UploadedImage.objects.all()
     serializer_class = serializers.UploadNewImageSerializer
@@ -83,30 +101,9 @@ class GalleryViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def _params_to_ints(self, qs):
-        """Convert a list of string IDs to a list of integers"""
-        return [int(str_id) for str_id in qs.split(',')]
-
     def get_queryset(self):
-        """Retrieve the recipes for the authenticated user"""
-        # filter queryset using tags if provided as an arg in the get request
-        tags = self.request.query_params.get('tags')
-        ingredients = self.request.query_params.get('ingredients')
-        queryset = self.queryset
-
-        if tags:
-            tags_ids = self._params_to_ints(tags)
-            # tags__id__in : Django synstax for filtering on foreign keys
-            # filter by ID on the remote table
-            # in: function. Return all the tags which have their ID inside
-            # the list tags_ids
-            queryset = queryset.filter(tags__id__in=tags_ids)
-
-        if ingredients:
-            ingredient_ids = self._params_to_ints(ingredients)
-            queryset = queryset.filter(ingredients__id__in=ingredient_ids)
-
-        return queryset.filter(user=self.request.user)
+        """Retrieve the galleries for the authenticated user"""
+        return self.queryset.filter(user=self.request.user)
 
     # function used to retrieve the serializer class for
     # a particular request. Override this function to change
@@ -122,7 +119,7 @@ class GalleryViewSet(viewsets.ModelViewSet):
         return self.serializer_class
 
     def perform_create(self, serializer):
-        """Create a new recipe"""
+        """Create a new gallery"""
         serializer.save(user=self.request.user)
 
     # custom action, detail=True makes action available for a specific recipe
