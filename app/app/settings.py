@@ -41,9 +41,18 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'core',
     'user',
+    'accounts',
     'gallery',
-    'frontend',
+
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    )
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

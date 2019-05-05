@@ -45,6 +45,14 @@ class UploadNewImageSerializer(ImageSerializer):
         model = UploadedImage
         fields = ('id', 'name', 'tags', 'gallery', 'image',)
         read_only_fields = ('id',)
+    
+    def validate_name(self, value):
+        if self.instance:
+            qs = qs.exclude(id=self.instance.id)
+        qs = UploadedImage.objects.filter(name__iexact=value)
+        if qs.exists():
+            raise serializers.ValidationError("This image already exists")
+        return value
 
 
 class GallerySerializer(serializers.ModelSerializer):
@@ -56,3 +64,11 @@ class GallerySerializer(serializers.ModelSerializer):
         model = Gallery
         fields = ('id', 'name', 'images')
         read_only_fields = ('id', 'images')
+
+    def validate_name(self, value):
+        qs = Gallery.objects.filter(name__iexact=value)
+        if self.instance:
+            qs = qs.exclude(id=self.instance.id)
+        if qs.exists():
+            raise serializers.ValidationError("This gallery already exists")
+        return value
