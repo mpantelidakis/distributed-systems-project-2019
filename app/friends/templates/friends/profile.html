@@ -1,4 +1,4 @@
-{% extends 'accounts/base_.html' %}
+{% extends 'friends/base_.html' %}
 
 {% block content %}
 
@@ -10,20 +10,20 @@
 		<h1>Friends</h1>
 		
 		{% for friend in friends_list %}
-			<a href="{{ friend.user.profile.get_absolute_url }}">{{ friend.user.username }}</a>
+			<a href="{{ friend.user.profile.get_absolute_url }}">{{ friend.user.name }}</a>
 		{% endfor %}
 		<hr>
 		<h2>Sent Friend requests</h2>
 		<ul>
 		{% for s_request in sent_friend_requests %}
-			<li>{{ s_request.to_user.username }}</li>
+			<li>{{ s_request.to_user.name }}</li>
 		{% endfor %}
 		</ul>
 		<hr>
 		<h2>Received Friend requests</h2>
 		
 		{% for r_request in rec_friend_requests %}
-			<p><a href="{{ r_request.from_user.profile.get_absolute_url }}">{{ r_request.from_user.username }}</a></p>
+			<p><a href="{{ r_request.from_user.profile.get_absolute_url }}">{{ r_request.from_user.name }}</a></p>
 			<small><a class='btn btn-primary' href="/users/friend-request/accept/{{ r_request.from_user.id }}">Accept</a></small>
 			<small><a class='btn btn-warning' href="/users/friend-request/delete/{{ r_request.from_user.id }}">Ignore</a></small>
 		{% endfor %}

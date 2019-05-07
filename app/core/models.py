@@ -8,7 +8,12 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
 # this is the recommended way for retrieving settings
 from django.conf import settings
 
+
 from django.db.models.signals import post_save
+from django.template.defaultfilters import slugify
+import itertools
+from django.utils import timezone
+
 
 
 def image_file_path(instance, filename):
@@ -96,11 +101,15 @@ class UploadedImage(models.Model):
         on_delete=models.CASCADE,
     )
     tags = models.ManyToManyField('Tag')
-    image = models.ImageField(null=True, upload_to=image_file_path)
+    image = models.ImageField(blank=True, upload_to=image_file_path)
 
     # define the string representation of the model
     def __str__(self):
         return self.name
+    
+    @property
+    def owner(self):
+        return self.user
 
 
 class Gallery(models.Model):
@@ -114,19 +123,41 @@ class Gallery(models.Model):
     # define the string representation of the model
     def __str__(self):
         return self.name
+    
+    # will need it for permissions l8er
+    @property
+    def owner(self):
+        return self.user
 
 
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
-    slug = models.SlugField()
+    slug = models.SlugField(unique=True)
     friends = models.ManyToManyField("Profile", blank=True)
+    created_at = models.DateTimeField(editable=False, default=timezone.now)
+    modified_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            max_length = Profile._meta.get_field('slug').max_length
+            self.slug = orig = slugify(self.user.email)[:max_length]
+            self.created_at = timezone.now()
+
+        for x in itertools.count(1):
+            if not Profile.objects.filter(slug=self.slug).exists():
+                break
+            self.slug = "%s-%d" % (orig[:max_length - len(str(x)) - 1], x)
+
+        self.modified_at = timezone.now()
+        super(Profile, self).save(*args, **kwargs)
+        return Profile
 
     def __str__(self):
         return str(self.user.email)
 
     def get_absolute_url(self):
     	return "/users/{}".format(self.slug)
-
+    
 
 def post_save_user_model_receiver(sender, instance, created, *args, **kwargs):
     if created:
@@ -144,4 +175,4 @@ class FriendRequest(models.Model):
 	timestamp = models.DateTimeField(auto_now_add=True) # set when created 
 
 	def __str__(self):
-		return "From {}, to {}".format(self.from_user.username, self.to_user.username)
+		return "From {}, to {}".format(self.from_user.name, self.to_user.name)

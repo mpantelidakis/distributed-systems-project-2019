@@ -23,7 +23,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('user.urls')),
     path('api/gallery/', include('gallery.urls')),
-    path('users/', include('accounts.urls')),
+    path('api/friends/', include('friends.api.urls')),
+    path('friends/', include('friends.urls')),
     
 
     # add url for our media files

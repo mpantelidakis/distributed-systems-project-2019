@@ -8,6 +8,8 @@ from core.models import Tag, UploadedImage, Gallery
 
 from gallery import serializers
 
+from gallery.permissions import IsOwnerOrReadOnly
+
 
 class BaseTagAttrViewSet(viewsets.GenericViewSet,
                             mixins.ListModelMixin,
@@ -47,13 +49,13 @@ class TagViewSet(BaseTagAttrViewSet):
     serializer_class = serializers.TagSerializer
 
 
-class DisplayImagesViewSet(viewsets.GenericViewSet,
-                           mixins.ListModelMixin):
+class ImageViewSet(viewsets.ModelViewSet):
     """Display images in the database"""
     queryset = UploadedImage.objects.all()
     serializer_class = serializers.ImageSerializer
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly,)
+    # http_method_names = ['get', 'post', 'delete', 'patch', 'head', 'options']
 
     def _params_to_ints(self, qs):
         """Convert a list of string IDs to a list of integers"""
@@ -73,21 +75,18 @@ class DisplayImagesViewSet(viewsets.GenericViewSet,
             # the list tags_ids
             queryset = queryset.filter(tags__id__in=tags_ids)
 
-        return self.queryset.filter(user=self.request.user)
+        # return queryset.filter(user=self.request.user)
+        return queryset
 
-    def perform_create(self, serializer):
-        """Create a new object"""
-        serializer.save(user=self.request.user)
+    def get_serializer_class(self):
+        """Return appropriate serializer class"""
+        if self.action == 'retrieve':
+            return serializers.ImageDetailSerializer
 
+        if self.request.method == 'PUT':
+            return serializers.ImageDetailSerializerNoImageField
 
-class UploadImageViewSet(viewsets.GenericViewSet,
-                         mixins.CreateModelMixin):
-    """Upload an image in the database"""
-    queryset = UploadedImage.objects.all()
-    serializer_class = serializers.UploadNewImageSerializer
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
+        return self.serializer_class
 
     def perform_create(self, serializer):
         """Create a new object"""
@@ -99,11 +98,12 @@ class GalleryViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.GallerySerializer
     queryset = Gallery.objects.all()
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly,)
 
     def get_queryset(self):
         """Retrieve the galleries for the authenticated user"""
-        return self.queryset.filter(user=self.request.user)
+        #return self.queryset.filter(user=self.request.user)
+        return self.queryset
 
     # function used to retrieve the serializer class for
     # a particular request. Override this function to change
@@ -142,3 +142,6 @@ class GalleryViewSet(viewsets.ModelViewSet):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+# TODO IMPLEMENT IS FRIEND PERMISSION AND CHANGE ISOWNERORREADONLY
