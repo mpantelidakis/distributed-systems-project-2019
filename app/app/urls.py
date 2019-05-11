@@ -23,7 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('user.urls')),
     path('api/gallery/', include('gallery.urls')),
-    path('api/friends/', include('friends.api.urls')),
+    path('api/friends/', include('friends.api.urls', namespace='friends-api')),
     path('friends/', include('friends.urls')),
     
 

@@ -8,13 +8,13 @@ from core.models import Tag, UploadedImage, Gallery
 
 from gallery import serializers
 
-from gallery.permissions import IsOwnerOrReadOnly
+from gallery.permissions import IsOwnerOrReadOnly, IsOwnderOrFriendOr403
 
 
 class BaseTagAttrViewSet(viewsets.GenericViewSet,
                             mixins.ListModelMixin,
                             mixins.CreateModelMixin):
-    """Base viewset for user owned recipe attributes"""
+    """Base viewset for user owned tag attributes"""
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
@@ -54,8 +54,7 @@ class ImageViewSet(viewsets.ModelViewSet):
     queryset = UploadedImage.objects.all()
     serializer_class = serializers.ImageSerializer
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly,)
-    # http_method_names = ['get', 'post', 'delete', 'patch', 'head', 'options']
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly, IsOwnderOrFriendOr403 )
 
     def _params_to_ints(self, qs):
         """Convert a list of string IDs to a list of integers"""
@@ -76,7 +75,7 @@ class ImageViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(tags__id__in=tags_ids)
 
         # return queryset.filter(user=self.request.user)
-        return queryset
+        return queryset.filter(user=self.request.user)
 
     def get_serializer_class(self):
         """Return appropriate serializer class"""
@@ -98,7 +97,7 @@ class GalleryViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.GallerySerializer
     queryset = Gallery.objects.all()
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly,)
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly, IsOwnderOrFriendOr403, )
 
     def get_queryset(self):
         """Retrieve the galleries for the authenticated user"""
@@ -113,8 +112,8 @@ class GalleryViewSet(viewsets.ModelViewSet):
         """Return appropriate serializer class"""
         if self.action == 'retrieve':
             return serializers.GalleryDetailSerializer
-        elif self.action == 'custom_action':
-            return serializers.GalleryCustomSerializer
+        # elif self.action == 'custom_action':
+        #     return serializers.GalleryCustomSerializer
 
         return self.serializer_class
 
@@ -124,24 +123,21 @@ class GalleryViewSet(viewsets.ModelViewSet):
 
     # custom action, detail=True makes action available for a specific recipe
     # that has been already created
-    @action(methods=['POST'], detail=True, url_path='upload-image')
-    def custom_action(self, request, pk=None):
-        """Upload an image to a recipe"""
-        gallery = self.get_object()
-        serializer = self.get_serializer(
-            gallery,
-            data=request.data
-        )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-
-# TODO IMPLEMENT IS FRIEND PERMISSION AND CHANGE ISOWNERORREADONLY
+    # @action(methods=['POST'], detail=True, url_path='upload-image')
+    # def custom_action(self, request, pk=None):
+    #     """Upload an image to a recipe"""
+    #     gallery = self.get_object()
+    #     serializer = self.get_serializer(
+    #         gallery,
+    #         data=request.data
+    #     )
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(
+    #             serializer.data,
+    #             status=status.HTTP_200_OK
+    #         )
+    #     return Response(
+    #         serializer.errors,
+    #         status=status.HTTP_400_BAD_REQUEST
+    #     )

@@ -124,7 +124,6 @@ class Gallery(models.Model):
     def __str__(self):
         return self.name
     
-    # will need it for permissions l8er
     @property
     def owner(self):
         return self.user
@@ -132,7 +131,7 @@ class Gallery(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, max_length=50)
     friends = models.ManyToManyField("Profile", blank=True)
     created_at = models.DateTimeField(editable=False, default=timezone.now)
     modified_at = models.DateTimeField()
@@ -143,10 +142,11 @@ class Profile(models.Model):
             self.slug = orig = slugify(self.user.email)[:max_length]
             self.created_at = timezone.now()
 
-        for x in itertools.count(1):
-            if not Profile.objects.filter(slug=self.slug).exists():
-                break
-            self.slug = "%s-%d" % (orig[:max_length - len(str(x)) - 1], x)
+            # since e-mails are unique this does nothing atm
+            for x in itertools.count(1):
+                if not Profile.objects.filter(slug=self.slug).exists():
+                    break
+                self.slug = "%s-%d" % (orig[:max_length - len(str(x)) - 1], x)
 
         self.modified_at = timezone.now()
         super(Profile, self).save(*args, **kwargs)
@@ -154,9 +154,13 @@ class Profile(models.Model):
 
     def __str__(self):
         return str(self.user.email)
+    
+    @property
+    def owner(self):
+        return self.user
 
     def get_absolute_url(self):
-    	return "/users/{}".format(self.slug)
+    	return "/profiles/{}".format(self.slug)
     
 
 def post_save_user_model_receiver(sender, instance, created, *args, **kwargs):
@@ -169,10 +173,37 @@ def post_save_user_model_receiver(sender, instance, created, *args, **kwargs):
 post_save.connect(post_save_user_model_receiver, sender=settings.AUTH_USER_MODEL)
 
 
-class FriendRequest(models.Model):
-	to_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='to_user',on_delete=models.CASCADE)
-	from_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='from_user',on_delete=models.CASCADE)
-	timestamp = models.DateTimeField(auto_now_add=True) # set when created 
+# class FriendRequest(models.Model):
+#     to_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='to_user',on_delete=models.CASCADE)
+#     from_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='from_user',on_delete=models.CASCADE)
+#     timestamp = models.DateTimeField(auto_now_add=True) # set when created 
 
-	def __str__(self):
-		return "From {}, to {}".format(self.from_user.name, self.to_user.name)
+#     def __str__(self):
+#         return "From {}, to {}".format(self.from_user.name, self.to_user.name)
+
+#     @property
+#     def owner(self):
+#         return self.from_user
+
+class Comment(models.Model):
+
+    image = models.ForeignKey(UploadedImage, related_name='comments', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    # likes = models.ManyToManyField(settings.AUTH_USER_MODEL,blank=True,related_name='comment_likes')
+    # dislikes = models.ManyToManyField(settings.AUTH_USER_MODEL,blank=True,related_name='comment_dislikes')
+    comment = models.CharField(max_length=1024)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True)
+
+    def __str__(self):
+        return 'Comment of {} to image {}'.format(self.user, self.image)
+
+    @property
+    def owner(self):
+        return self.user
+
+    # def get_api_like_url(self):
+    #     return reverse('api:comments-like',args=[self.id])
+
+    # def get_api_dislike_url(self):
+    #     return reverse('api:comments-dislike',args=[self.id])

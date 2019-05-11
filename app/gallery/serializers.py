@@ -20,6 +20,19 @@ class TagSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This tag already exists")
         return value
 
+
+class GalleryFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    """
+    Custom primary key related field to filter galleries for the
+    logged in user
+    """
+    def get_queryset(self):
+        request = self.context.get('request', None)
+        queryset = super(GalleryFilteredPrimaryKeyRelatedField, self).get_queryset()
+        if not request or not queryset:
+            return None
+        return queryset.filter(user=request.user)
+
 class ImageSerializer(serializers.ModelSerializer):
     """Serializer for image objects"""
 
@@ -28,7 +41,7 @@ class ImageSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all()
     )
     
-    gallery = serializers.PrimaryKeyRelatedField(
+    gallery = GalleryFilteredPrimaryKeyRelatedField(
         queryset=Gallery.objects.all()
     )
 
@@ -47,21 +60,7 @@ class ImageSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This image already exists")
         return value
     
-    # overriding __init__ to filter galleries
-    def __init__(self, *args, **kwargs):
-        super(ImageSerializer, self).__init__(*args, **kwargs)
-
-        context = kwargs.get('context', None)
-        if context:
-            request_user = self.context['request'].user
-            self.fields['gallery'].queryset = Gallery.objects.filter(
-                                                        user=request_user
-                                                    )
-        else:
-            print('No context is being passed to the serializer')
-
-
-
+    
 class GallerySerializer(serializers.ModelSerializer):
     """Serializer for gallery objects"""
 
@@ -90,10 +89,11 @@ class GalleryDetailSerializer(serializers.ModelSerializer):
     """Serializer for gallery objects"""
 
     images = ImageSerializer(many=True)
+    owner = serializers.ReadOnlyField(source='owner.email')
 
     class Meta:
         model = Gallery
-        fields = ('id', 'name', 'images')
+        fields = ('id', 'owner', 'name', 'images')
         read_only_fields = ('id', 'images')
 
 

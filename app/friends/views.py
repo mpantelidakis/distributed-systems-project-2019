@@ -4,7 +4,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 
 
-from core.models import Profile, FriendRequest
+from core.models import Profile
 
 from django.http import HttpResponse
 from rest_framework.views import APIView
@@ -26,42 +26,42 @@ class UserDisplay(APIView):
         return render(request, "accounts/home.html", context)
   
 
-class FriendRequestView(APIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+# class FriendRequestView(APIView):
+#     authentication_classes = (TokenAuthentication,)
+#     permission_classes = (IsAuthenticated,)
 
-    def send_friend_request(request, id):
-        user = get_object_or_404(User, id=id)
-        frequest, created = FriendRequest.objects.get_or_create(
-            from_user=request.user,
-            to_user=user)
-        return HttpResponseRedirect('/users')
+#     def send_friend_request(request, id):
+#         user = get_object_or_404(User, id=id)
+#         frequest, created = FriendRequest.objects.get_or_create(
+#             from_user=request.user,
+#             to_user=user)
+#         return HttpResponseRedirect('/users')
 
-def cancel_friend_request(request, id):
-	if request.user.is_authenticated:
-		user = get_object_or_404(User, id=id)
-		frequest = FriendRequest.objects.filter(
-			from_user=request.user,
-			to_user=user).first()
-		frequest.delete()
-		return HttpResponseRedirect('/users')
+# def cancel_friend_request(request, id):
+# 	if request.user.is_authenticated:
+# 		user = get_object_or_404(User, id=id)
+# 		frequest = FriendRequest.objects.filter(
+# 			from_user=request.user,
+# 			to_user=user).first()
+# 		frequest.delete()
+# 		return HttpResponseRedirect('/users')
 
-def accept_friend_request(request, id):
-	from_user = get_object_or_404(User, id=id)
-	frequest = FriendRequest.objects.filter(from_user=from_user, to_user=request.user).first()
-	user1 = frequest.to_user
-	user2 = from_user
-    # TODO make this non symmetric
-	user1.profile.friends.add(user2.profile)
-	user2.profile.friends.add(user1.profile)
-	frequest.delete()
-	return HttpResponseRedirect('/users/{}'.format(request.user.profile.slug))
+# def accept_friend_request(request, id):
+# 	from_user = get_object_or_404(User, id=id)
+# 	frequest = FriendRequest.objects.filter(from_user=from_user, to_user=request.user).first()
+# 	user1 = frequest.to_user
+# 	user2 = from_user
+#     # TODO make this non symmetric
+# 	user1.profile.friends.add(user2.profile)
+# 	user2.profile.friends.add(user1.profile)
+# 	frequest.delete()
+# 	return HttpResponseRedirect('/users/{}'.format(request.user.profile.slug))
 
-def delete_friend_request(request, id):
-	from_user = get_object_or_404(User, id=id)
-	frequest = FriendRequest.objects.filter(from_user=from_user, to_user=request.user).first()
-	frequest.delete()
-	return HttpResponseRedirect('/users/{}'.format(request.user.profile.slug))
+# def delete_friend_request(request, id):
+# 	from_user = get_object_or_404(User, id=id)
+# 	frequest = FriendRequest.objects.filter(from_user=from_user, to_user=request.user).first()
+# 	frequest.delete()
+# 	return HttpResponseRedirect('/users/{}'.format(request.user.profile.slug))
 
 
 class ProfileView(APIView):
