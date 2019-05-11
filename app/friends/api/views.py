@@ -21,7 +21,7 @@ from .serializers import (
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from friends.api.permissions import IsOwnerOrReadOnly
+from core.permissions import IsOwnerOrReadOnly
 
 from rest_framework.response import Response
 

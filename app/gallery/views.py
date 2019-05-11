@@ -8,7 +8,9 @@ from core.models import Tag, UploadedImage, Gallery
 
 from gallery import serializers
 
-from gallery.permissions import IsOwnerOrReadOnly, IsOwnderOrFriendOr403
+from core.permissions import IsOwnerOrReadOnly
+from gallery.permissions import IsOwnderOrFriendOr403
+
 
 
 class BaseTagAttrViewSet(viewsets.GenericViewSet,
@@ -99,10 +101,10 @@ class GalleryViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated, IsOwnerOrReadOnly, IsOwnderOrFriendOr403, )
 
-    def get_queryset(self):
-        """Retrieve the galleries for the authenticated user"""
-        #return self.queryset.filter(user=self.request.user)
-        return self.queryset
+    # def get_queryset(self):
+    #     """Retrieve the galleries for the authenticated user"""
+    #     #return self.queryset.filter(user=self.request.user)
+    #     return self.queryset
 
     # function used to retrieve the serializer class for
     # a particular request. Override this function to change

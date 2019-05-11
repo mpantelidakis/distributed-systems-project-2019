@@ -63,7 +63,7 @@ class ModelTests(TestCase):
         user = sample_user()
         gallery = models.Gallery.objects.create(
             user=user,
-            title='Summer'
+            name='Summer'
         )
         image = models.UploadedImage.objects.create(
             user=user,
@@ -76,9 +76,9 @@ class ModelTests(TestCase):
         """Test the gallery string representation"""
         gallery = models.Gallery.objects.create(
             user=sample_user(),
-            title='Summer'
+            name='Summer'
         )
-        self.assertEqual(str(gallery), gallery.title)
+        self.assertEqual(str(gallery), gallery.name)
 
     # uuid4 is a function inside the uuid module
     # that generates a unique uuid version 4

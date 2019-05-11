@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/user/', include('user.urls')),
     path('api/gallery/', include('gallery.urls')),
     path('api/friends/', include('friends.api.urls', namespace='friends-api')),
+    path('api/comment/', include('comment.urls')),
     path('friends/', include('friends.urls')),
     
 

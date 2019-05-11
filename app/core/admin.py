@@ -48,4 +48,5 @@ admin.site.register(models.Profile)
 admin.site.register(models.Tag)
 admin.site.register(models.UploadedImage)
 admin.site.register(models.Gallery)
+admin.site.register(models.Comment)
 

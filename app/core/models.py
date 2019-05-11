@@ -86,7 +86,7 @@ class Tag(models.Model):
 
 
 class UploadedImage(models.Model):
-    """Ingredient to be used in a recipe"""
+    """UploadedImage object"""
     gallery = models.ForeignKey(
         'Gallery',
         related_name='images',
@@ -95,7 +95,7 @@ class UploadedImage(models.Model):
     name = models.CharField(max_length=255)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-
+        related_name='images',
         # when a user is deleted, we also delete all the tags
         # that he/she has created
         on_delete=models.CASCADE,
@@ -134,7 +134,7 @@ class Profile(models.Model):
     slug = models.SlugField(unique=True, max_length=50)
     friends = models.ManyToManyField("Profile", blank=True)
     created_at = models.DateTimeField(editable=False, default=timezone.now)
-    modified_at = models.DateTimeField()
+    modified_at = models.DateTimeField(blank=True)
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -192,8 +192,16 @@ class Comment(models.Model):
 
     # likes = models.ManyToManyField(settings.AUTH_USER_MODEL,blank=True,related_name='comment_likes')
     # dislikes = models.ManyToManyField(settings.AUTH_USER_MODEL,blank=True,related_name='comment_dislikes')
-    comment = models.CharField(max_length=1024)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True)
+    comment_text = models.CharField(max_length=1024)
+    created_at = models.DateTimeField(editable=False, default=timezone.now)
+    edited_at = models.DateTimeField(blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.created_at = timezone.now()
+        self.edited_at = timezone.now()
+        super(Comment, self).save(*args, **kwargs)
+        return Comment
 
     def __str__(self):
         return 'Comment of {} to image {}'.format(self.user, self.image)

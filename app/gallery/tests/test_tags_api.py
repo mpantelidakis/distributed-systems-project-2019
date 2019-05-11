@@ -15,7 +15,7 @@ TAGS_URL = reverse('gallery:tag-list')
 
 def sample_gallery(user, title='NiceG'):
     """Create and return a sample gallery"""
-    return Gallery.objects.create(user=user, title=title)
+    return Gallery.objects.create(user=user, name=title)
 
 
 class PublicTagsApiTest(TestCase):

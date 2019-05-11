@@ -119,7 +119,7 @@ class ImageDetailSerializerNoImageField(serializers.ModelSerializer):
         many=True,
         queryset=Tag.objects.all()
     )
-    gallery = serializers.PrimaryKeyRelatedField(
+    gallery = GalleryFilteredPrimaryKeyRelatedField(
         queryset=Gallery.objects.all()
     )
 
