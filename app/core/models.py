@@ -160,7 +160,7 @@ class Profile(models.Model):
         return self.user
 
     def get_absolute_url(self):
-    	return "/profiles/{}".format(self.slug)
+    	return "/friends/{}".format(self.slug)
     
 
 def post_save_user_model_receiver(sender, instance, created, *args, **kwargs):

@@ -35,7 +35,7 @@ class GalleryFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
 
 class ImageSerializer(serializers.ModelSerializer):
     """Serializer for image objects"""
-
+    
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all()
@@ -47,8 +47,10 @@ class ImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UploadedImage
-        fields = ('id', 'name', 'tags', 'gallery', 'image')
+        fields = ('id', 'name', 'tags', 'gallery', 'image',)
         read_only_fields = ('id',)
+
+
 
     # image names should be unique. why? because!
     def validate_name(self, value):
@@ -96,18 +98,6 @@ class GalleryDetailSerializer(serializers.ModelSerializer):
         fields = ('id', 'owner', 'name', 'images')
         read_only_fields = ('id', 'images')
 
-
-class ImageDetailSerializer(serializers.ModelSerializer):
-    """Serialize an image detail"""
-    tags = TagSerializer(many=True)
-    gallery = serializers.PrimaryKeyRelatedField(
-        queryset=Gallery.objects.all()
-    )
-
-    class Meta:
-        model = UploadedImage
-        fields = ('id', 'name', 'gallery', 'tags', 'image',)
-        read_only_fields = ('id', 'image',)
 
 # below serializer won't have image field inside so that the
 # user cannot update the image field.

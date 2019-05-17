@@ -8,7 +8,7 @@ from .views import (
     # FriendRequestDeleteAPIView,
 )
 
-app_name = 'friends'
+app_name = 'friends-api'
 
 urlpatterns = [
     path('profiles/',ProfileListAPIView.as_view(), name='profile-list'),

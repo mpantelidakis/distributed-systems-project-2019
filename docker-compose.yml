@@ -6,33 +6,38 @@ services:
       context: .
     ports:
       - "8000:8000"
-    volumes:
-      - ./app:/app
     # run the wait_for_db command and after it succeeds runserver
     command: >
       sh -c "python manage.py wait_for_db &&
              python manage.py migrate &&
+             python manage.py collectstatic --no-input --clear &&
              python manage.py runserver 0.0.0.0:8000"
-    environment:
-      - DB_HOST=db
-      - DB_NAME=postgres
-      - DB_USER=postgres
-      # TODO change this with an encrypted password for production
-      - DB_PASS=supersecretpassword
+    volumes:
+      - ./app:/app
+      - static_volume:/vol/web/static
+      - media_volume:/vol/web/media
+    expose:
+      - 8000
+    env_file: .env
     depends_on:
-      - db
-
-      
+      - db 
   db:
     image: postgres:10-alpine
-    environment:
-      - POSTGRESS_DB=postgres
-      - POSTGRES_USER=postgres
-      # TODO change this with an encrypted password for production
-      - POSTGRES_PASSWORD=supersecretpassword
+    env_file: .env.db
     volumes:
       - my-datavolume:/var/lib/postgresql/data
+  nginx:
+    build: ./nginx
+    volumes:
+      - static_volume:/vol/web/static
+      - media_volume:/vol/web/media
+    ports:
+      - 1337:80
+    depends_on:
+      - app
 
 
 volumes:
   my-datavolume:
+  static_volume:
+  media_volume:

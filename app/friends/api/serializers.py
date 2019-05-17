@@ -15,31 +15,34 @@ profile_detail_url = serializers.HyperlinkedIdentityField(
     lookup_field='slug'
 )
 
-class UserExclusionPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+class UserExclusionPrimaryKeyRelatedField(serializers.StringRelatedField):
     """
     Custom primary key related field to exclude the object associated
     with the currently logged in user
     """
-    def get_queryset(self):
-        request = self.context.get('request', None)
-        queryset = super(UserExclusionPrimaryKeyRelatedField, self).get_queryset()
-        if not request or not queryset:
-            return None
-        return queryset.exclude(user=request.user)
 
+    def to_internal_value(self, value):
+        request = self.context.get('request', None)
+        user = get_object_or_404(User,email=value)
+        profile = get_object_or_404(Profile,user=user.id)  
+        if profile and profile.user is not request.user:
+            return profile
+       
 
 class ProfileListSerializer(serializers.ModelSerializer):
     """Serializer for Profile list"""
     url = profile_detail_url
+    user = serializers.StringRelatedField()
+
     class Meta:
         model = Profile
-        fields = ('url', 'id', 'user',)
+        fields = ('id', 'url', 'user', 'slug',)
         read_only_fields = ('id', 'user',)
 
 
 class ProfileDetailSerializer(serializers.ModelSerializer):
     """Serializer for Retrieving and Updating profiles"""
-    friends = UserExclusionPrimaryKeyRelatedField(queryset=Profile.objects.all(), many=True)
+    friends = UserExclusionPrimaryKeyRelatedField(many=True)
 
     class Meta:
         model = Profile

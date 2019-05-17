@@ -32,6 +32,9 @@ class ProfileListAPIView(ListAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    def get_queryset(self):
+        return self.queryset.exclude(user=self.request.user)
+
 
 class ProfileDetailAPIView(RetrieveUpdateAPIView):
     queryset = Profile.objects.all()

@@ -19,13 +19,22 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 
+from .views import HomeTemplateView, TestAuthView, LogoutViewEx
+from rest_auth.views import LoginView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/user/', include('user.urls')),
+    path('api/user/', include('user.api.urls')),
     path('api/gallery/', include('gallery.urls')),
     path('api/friends/', include('friends.api.urls', namespace='friends-api')),
     path('api/comment/', include('comment.urls')),
-    path('friends/', include('friends.urls')),
+    path('friends/', include('friends.urls', namespace='friends')),
+    # path('user/', include('user.urls')),
+    
+    path('rest-auth/logout/', LogoutViewEx.as_view(), name='rest_logout', ),
+    path('rest-auth/login/', LoginView.as_view(), name='rest_login', ),
+    path('', HomeTemplateView.as_view(), name='home', ),
+    path('test_auth/', TestAuthView.as_view(), name='test_auth', ),
     
 
     # add url for our media files
@@ -35,4 +44,8 @@ urlpatterns = [
     # Makes the media url available in the devserver
     # so that we can test without having to set up
     # a separate webserver for serving these media files
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# if bool(settings.DEBUG):
+#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

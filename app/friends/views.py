@@ -11,19 +11,19 @@ from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
+from django.views import View
+
 User = get_user_model()
 
-class UserDisplay(APIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+class UserDisplay(View):
 
     def get(self, request):
     
-        users = Profile.objects.exclude(user=request.user)
+        available_users = Profile.objects.exclude(user=request.user)
         context = {
-            'users': users
+            'users': available_users
         }
-        return render(request, "accounts/home.html", context)
+        return render(request, "myprofile.html", context)
   
 
 # class FriendRequestView(APIView):
@@ -64,15 +64,19 @@ class UserDisplay(APIView):
 # 	return HttpResponseRedirect('/users/{}'.format(request.user.profile.slug))
 
 
-class ProfileView(APIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+
+
+from django.views.generic import TemplateView
+
+class ProfileTemplateView(TemplateView):
+    template_name = 'myprofile.html'
+
+
+class ProfileView(View):
 
     def get(self, request, slug):
         p = Profile.objects.filter(slug=slug).first()
         u = p.user
-        sent_friend_requests = FriendRequest.objects.filter(from_user=p.user)
-        rec_friend_requests = FriendRequest.objects.filter(to_user=p.user)
 
         friends = p.friends.all()
 
@@ -81,17 +85,10 @@ class ProfileView(APIView):
         if p not in request.user.profile.friends.all():
             button_status = 'not_friend'
 
-            # if we have sent him a friend request
-            if len(FriendRequest.objects.filter(
-                from_user=request.user).filter(to_user=p.user)) == 1:
-                    button_status = 'friend_request_sent'
-
         context = {
             'u': u,
             'button_status': button_status,
             'friends_list': friends,
-            'sent_friend_requests': sent_friend_requests,
-            'rec_friend_requests': rec_friend_requests
         }
 
-        return render(request, "accounts/profile.html", context)
+        return render(request, "friendprofile.html", context)

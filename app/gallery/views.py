@@ -81,9 +81,7 @@ class ImageViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         """Return appropriate serializer class"""
-        if self.action == 'retrieve':
-            return serializers.ImageDetailSerializer
-
+     
         if self.request.method == 'PUT':
             return serializers.ImageDetailSerializerNoImageField
 
