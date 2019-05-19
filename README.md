@@ -1,4 +1,4 @@
-# vsamTesting
+# distributed-systems-project-2019
 
 clone the repository,
 add the .env and .env.db files
