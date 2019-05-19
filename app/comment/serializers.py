@@ -36,9 +36,11 @@ class CommentSerializer(serializers.ModelSerializer):
         queryset=UploadedImage.objects.all()
     )
 
+    owner = serializers.ReadOnlyField(source='owner.email')
+
     class Meta:
         model = Comment
-        fields = ('id', 'user', 'image', 'comment_text', 'created_at', 'edited_at')
+        fields = ('id', 'owner', 'image', 'comment_text', 'created_at', 'edited_at')
         read_only_fields = ('id', 'user', 'created_at', 'edited_at')
 
 # class CommentDetailSerializer(serializers.ModelSerializer):

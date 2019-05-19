@@ -15,15 +15,15 @@ from django.views import View
 
 User = get_user_model()
 
-class UserDisplay(View):
+# class UserDisplay(View):
 
-    def get(self, request):
+#     def get(self, request):
     
-        available_users = Profile.objects.exclude(user=request.user)
-        context = {
-            'users': available_users
-        }
-        return render(request, "myprofile.html", context)
+#         available_users = Profile.objects.exclude(user=request.user)
+#         context = {
+#             'users': available_users
+#         }
+#         return render(request, "myprofile.html", context)
   
 
 # class FriendRequestView(APIView):
@@ -66,29 +66,17 @@ class UserDisplay(View):
 
 
 
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView,View
+from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 
-class ProfileTemplateView(TemplateView):
-    template_name = 'myprofile.html'
+class ManageFriendsTemplateViewView(TemplateView):
+    template_name = 'manage_friends.html'
 
 
-class ProfileView(View):
+class ProfileDetailView(View):
 
-    def get(self, request, slug):
-        p = Profile.objects.filter(slug=slug).first()
-        u = p.user
+    def view_profile(request, slug):
+        profile = get_object_or_404(Profile, slug=slug)
+        return render(request,'user_profile.html')
 
-        friends = p.friends.all()
-
-        # is this user our friend
-        button_status = 'none'
-        if p not in request.user.profile.friends.all():
-            button_status = 'not_friend'
-
-        context = {
-            'u': u,
-            'button_status': button_status,
-            'friends_list': friends,
-        }
-
-        return render(request, "friendprofile.html", context)

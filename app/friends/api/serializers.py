@@ -15,7 +15,7 @@ profile_detail_url = serializers.HyperlinkedIdentityField(
     lookup_field='slug'
 )
 
-class UserExclusionPrimaryKeyRelatedField(serializers.StringRelatedField):
+class UserExclusionStringRelatedField(serializers.StringRelatedField):
     """
     Custom primary key related field to exclude the object associated
     with the currently logged in user
@@ -42,7 +42,7 @@ class ProfileListSerializer(serializers.ModelSerializer):
 
 class ProfileDetailSerializer(serializers.ModelSerializer):
     """Serializer for Retrieving and Updating profiles"""
-    friends = UserExclusionPrimaryKeyRelatedField(many=True)
+    friends = UserExclusionStringRelatedField(many=True)
 
     class Meta:
         model = Profile

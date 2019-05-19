@@ -10,7 +10,7 @@ from core.models import Tag, UploadedImage, Gallery
 from gallery.serializers import TagSerializer
 
 
-TAGS_URL = reverse('gallery:tag-list')
+TAGS_URL = reverse('gallery-api:tag-list')
 
 
 def sample_gallery(user, title='NiceG'):

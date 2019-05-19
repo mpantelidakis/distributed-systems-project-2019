@@ -10,6 +10,7 @@ from django.conf import settings
 
 
 from django.db.models.signals import post_save
+from rest_framework.authtoken.models import Token
 from django.template.defaultfilters import slugify
 import itertools
 from django.utils import timezone
@@ -163,16 +164,17 @@ class Profile(models.Model):
     	return "/friends/{}".format(self.slug)
     
 
+# When a user is created, also create a token and a profile
 def post_save_user_model_receiver(sender, instance, created, *args, **kwargs):
     if created:
         try:
             Profile.objects.create(user=instance)
+            Token.objects.create(user=instance)
         except:
             pass
 
-post_save.connect(post_save_user_model_receiver, sender=settings.AUTH_USER_MODEL)
 
-
+        
 # class FriendRequest(models.Model):
 #     to_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='to_user',on_delete=models.CASCADE)
 #     from_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='from_user',on_delete=models.CASCADE)

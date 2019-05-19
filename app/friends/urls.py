@@ -2,15 +2,14 @@ from django.conf.urls import url
 from django.urls import path
 
 from .views import (
-	UserDisplay, 
-	ProfileView,
-	ProfileTemplateView,
+	ProfileDetailView,
+	ManageFriendsTemplateViewView,
 	)
 
 app_name='friends'
 
 urlpatterns = [
-    path('me/', ProfileTemplateView.as_view(), name='me'),
-    path('<slug>/', ProfileView.as_view()),
+    path('', ManageFriendsTemplateViewView.as_view(), name='manage'),
+    path('<slug>/', ProfileDetailView.view_profile),
 ]
 

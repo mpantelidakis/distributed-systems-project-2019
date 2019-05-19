@@ -1,0 +1,363 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="index, follow">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Galleries</title>
+  <link rel="stylesheet" href='{% static "spectre.min.css" %}'>
+  <link rel="stylesheet" href='{% static "spectre-icons.min.css" %}'>
+  <link rel="icon" href="{% static 'favicon.ico' %}">
+  <style>
+  </style>
+</head>
+
+<body>
+    
+    <div id="id_login_required"></div>
+    <div id='id_get_all_galleries_response' class="api_response"></div>
+
+    <div class='column col-3'>
+        <button class="btn btn-primary"  id='id_open_gallery_modal'>Create a new Gallery</button>
+    </div>
+
+    <h2 id="id_my_galleries" class="header-h2">My galleries:</h2>
+
+    <div id="id_my_galleries_list" class="gallery_list"></div>
+
+    <h2 id="id_other_galleries" class="header-h2">Galleries other people have created:</h2>
+
+    <div id="id_other_galleries_list" class="gallery_list"></div>
+
+    <div class='column col-3'>
+        <a class="btn btn-primary" href='{% url "friends:manage" %}'>Manage Friends</a>
+    </div>
+    <div class='column col-3'>
+        <a class="btn btn-primary" href='{% url "home" %}'>Back to home page</a>
+    </div>
+
+
+
+
+    <div class="modal" id="id_new_gallery_modal">
+        <a href="#close" class="modal-overlay close-modal" aria-label="Close"></a>
+        <div class="modal-container">
+            <div class="modal-header">
+                <a href="#close" class="btn btn-clear float-right close-modal" aria-label="Close"></a>
+                <div class="modal-title h5">Create a new gallery</div>
+            </div>
+            <div class="modal-body">
+                <div class="content">
+                    <form>
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label class="form-label" for="id_input_gallery_name">Name</label>
+                            <input class="form-input" type="text" id="id_input_gallery_name" placeholder="Name">
+                        </div>
+                    </form>
+                    <div class='label label-error mt-1 d-invisible' id='id_modal_error'>
+                        Failed to create the gallery!
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id='id_create_gallery_button' >Create</button>
+                <a href="#close" class="btn close-modal" >Close</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="id_edit_gallery_modal">
+        <a href="#close" class="modal-overlay close-modal" aria-label="Close"></a>
+        <div class="modal-container">
+            <div class="modal-header">
+                <a href="#close" class="btn btn-clear float-right close-modal" aria-label="Close"></a>
+                <div class="modal-title h5">Rename your gallery</div>
+            </div>
+            <div class="modal-body">
+                <div class="content">
+                    <form>
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label class="form-label" for="id_input_gallery_new_name">New name</label>
+                            <input class="form-input" type="text" id="id_input_gallery_new_name" placeholder="New name">
+                        </div>
+                    </form>
+                    <div class='label label-error mt-1 d-invisible' id='id_edit_modal_error'>
+                        Failed to modify the gallery!
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id='id_edit_gallery_done_button' >Modify</button>
+                <a href="#close" class="btn close-modal" >Close</a>
+            </div>
+        </div>
+    </div>
+
+  
+    <script src='{% static "jquery-3.3.1.min.js" %}' ></script>
+    <script>
+        var g_urls = {
+            'galleries_url': "{% url 'gallery-api:gallery-list' %}",
+        };
+        var g_auth = localStorage.getItem("auth");
+        if(g_auth == null) {
+            g_auth = sessionStorage.getItem("auth");
+        }
+        
+        if(g_auth) {
+            try {
+                g_auth = JSON.parse(g_auth);
+                var my_username = g_auth.username;
+                var myProfileSlag = my_username.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
+                var my_profile_url = "/api/friends/profiles/" + myProfileSlag +'/';
+            } catch(error) {
+                g_auth = null; 
+            }
+        }
+
+        var getCookie = function(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        };
+        var g_csrftoken = getCookie('csrftoken');
+
+        $(document).ready(function(){ 
+  
+            //Neat for development, since we know the token for the headers, testing the API
+            if(g_auth){
+                console.log(g_auth);
+                ajaxPopulateGalleries();
+            }
+            else{
+                $("#id_login_required").html("<span class='label label-error'>Fail! Please log in to continue </span>");
+                $("#id_my_galleries").hide();
+                $("#id_other_galleries").hide();
+            }
+            
+        }); //FUNCTION THAT RUNS AFTER DOCUMENT LOADS ENDING
+
+        $('#id_open_gallery_modal').click(function() {
+            $('#id_new_gallery_modal').addClass('active');
+        });
+
+        $('#id_new_gallery_modal .close-modal').click(function() {
+            $('#id_new_gallery_modal').removeClass('active');
+        });
+
+       
+
+        $('#id_create_gallery_button').click(function() {
+            var gallery_name = $('#id_input_gallery_name').val();
+
+            if(gallery_name) {
+                console.log("Will try to create gallery with name: ", gallery_name);
+                $('#modal-error').addClass('d-invisible');
+                $.ajax({
+                    url: g_urls.galleries_url, 
+                    method: "POST", 
+                    data: {
+                        name: gallery_name,
+                        csrfmiddlewaretoken: g_csrftoken
+                    },
+                    beforeSend: function(request) {
+                        if(g_auth) {
+                            request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                        }
+                    }
+                }).done(function(data) {
+                    console.log("DONE: ", data);
+                    $('#id_new_gallery_modal').removeClass('active');
+                    
+                    //To create the correct url regardless of the url state
+                    var string = window.location.href;
+                    var index = string.lastIndexOf('/');
+                    var url = string.substr(0,index+1);
+                    $("<li/>").attr({"class":"item item_gallery","style":"padding-left:15px;list-style:none;margin-bottom:15px;"}).html(
+                        $("<a>").attr("href",url+data.id).text(data.name).add(
+                            $("<button/>").attr({"name":data.name, "value": data.id, "class": "btn btn_delete_gallery btn-error btn-sm","style":"margin-left:20px;"}).text("Delete").add(
+                                $("<button/>").attr({"name":data.name, "value": data.id, "class": "btn btn_edit_gallery btn-success btn-sm","style":"margin-left:15px;"}).text("Edit")   
+                            )
+                        )
+                    ).appendTo('#id_my_galleries_list');
+                }).fail(function(data) {
+                    console.log("FAIL", data);
+                    $('#id_modal_error').removeClass('d-invisible').text(data.responseText);
+                });
+            } else {
+                $('#id_modal_error').removeClass('d-invisible');
+            }
+        });
+
+
+        //GET Available galleries
+        function ajaxPopulateGalleries(){
+            $.ajax({
+                dataType : "json",
+                url: g_urls.galleries_url,
+                method: "GET",
+                data: {id:"id", name:"name", num_images:"number_of_images", owner:"owner"},
+                beforeSend: function(request) {
+                    if(g_auth) {
+                        request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                    }
+                }
+            }).done(function(data) {
+                var string = window.location.href;
+                var index = string.lastIndexOf('/');
+                var url = string.substr(0,index+1);
+                console.log(url);
+            
+                $(data).each(function(i,item) {
+                    // console.log(item.owner);
+                    // console.log(my_username);
+                    if(item.owner==my_username){
+                        $("<li/>").attr({"class":"item item_gallery","style":"padding-left:15px;list-style:none;margin-bottom:15px;"}).html(
+                            $("<a>").attr("href",url+item.id).text(item.name).add(
+                                $("<button/>").attr({"name":item.name, "value": item.id, "class": "btn btn_delete_gallery btn-error btn-sm","style":"margin-left:20px;"}).text("Delete").add(
+                                    $("<button/>").attr({"name":item.name, "value": item.id, "class": "btn btn_edit_gallery btn-success btn-sm","style":"margin-left:15px;"}).text("Edit")   
+                                )
+                            )
+                        ).appendTo('#id_my_galleries_list');
+                    }
+                    else{
+                        $("<li/>").attr({"class":"item item_gallery","style":"padding-left:15px;list-style:none;margin-bottom:15px;"}).html($("<a>").attr("href",url+item.id).text(item.name)).appendTo('#id_other_galleries_list');
+                    }
+                });
+                $('#id_get_all_galleries_response').html("<span class='label label-success'>Ok! Response: " + JSON.stringify(data));
+            }).fail(function(data) {
+                $('#id_get_all_galleries_response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
+            });
+        }
+
+
+
+
+    //DELETE Gallery FUNCTIONALITY
+    $('#id_my_galleries_list').on('click', '.btn_delete_gallery', function(){
+        
+        
+        gallery_to_delete_id = $(this).val();
+        gallery_to_delete_name = $(this).attr('name');
+        var url = "{% url 'gallery-api:gallery-detail' pk=1337 %}".replace(/1337/, gallery_to_delete_id.toString());
+
+        $.ajax({
+            contentType:'application/json',
+            url: url,
+            method: "DELETE",
+            beforeSend: function(request) {
+                if(g_auth) {
+                    request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                }
+            }
+        }).done(function() {
+
+            console.log("Successfully deteled gallery: " + gallery_to_delete_name);
+            $(".item_gallery:contains('" + gallery_to_delete_name + "')").remove();
+            $('.btn_delete_gallery').filter(function(){return this.value==gallery_to_delete_id}).remove();
+
+        }).fail(function(data, textStatus, errorThrown) {
+            console.log("The following error occured: " + textStatus, errorThrown);
+        });
+        
+    }); //FUNCTION ENDING
+
+    //When an edit button is pressed, trigger the edit modal and change the button's value,and name
+    $('#id_my_galleries_list').on('click', '.btn_edit_gallery', function(){
+        
+        $('#id_edit_gallery_modal').addClass('active');
+        $('#id_edit_gallery_done_button').val($(this).val());
+        $('#id_edit_gallery_done_button').attr("name",$(this).attr('name'));
+        
+    });
+    
+
+    $('#id_edit_gallery_modal .close-modal').click(function() {
+        $('#id_edit_gallery_modal').removeClass('active');
+    });
+
+     //EDIT Gallery FUNCTIONALITY
+    $('#id_edit_gallery_done_button').click(function() {
+           
+        gallery_to_edit_id = $(this).val();
+        gallery_to_edit_name = $(this).attr('name');
+        var url = "{% url 'gallery-api:gallery-detail' pk=1337 %}".replace(/1337/, gallery_to_edit_id.toString());
+
+        var gallery_name = $('#id_input_gallery_new_name').val();
+
+        if(gallery_name) {
+            console.log("Will try to change gallery name to: ", gallery_name);
+            $('#modal-error').addClass('d-invisible');
+            $.ajax({
+                url: url, 
+                method: "PUT", 
+                data: {name: gallery_name},
+                beforeSend: function(request) {
+                    if(g_auth) {
+                        request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                    }
+                }
+            }).done(function(data) {
+                console.log("DONE: ", data);
+                $('#id_edit_gallery_modal').removeClass('active');
+                $("a:contains('" + gallery_to_edit_name + "')").text(gallery_name);
+                $('.btn_delete_gallery').filter(function(){return this.value==gallery_to_edit_id}).attr("name",gallery_name);
+                $('.btn_edit_gallery').filter(function(){return this.value==gallery_to_edit_id}).attr("name",gallery_name);
+                
+            }).fail(function(data) {
+                console.log("FAIL", data);
+                $('#id_edit_modal_error').removeClass('d-invisible').text(data.responseText);
+            });
+        } else {
+            $('#id_edit_modal_error').removeClass('d-invisible');
+        }
+    });
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>

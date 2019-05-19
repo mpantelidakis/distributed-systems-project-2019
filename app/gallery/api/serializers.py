@@ -67,11 +67,12 @@ class GallerySerializer(serializers.ModelSerializer):
     """Serializer for gallery objects"""
 
     number_of_images = serializers.SerializerMethodField()
+    owner = serializers.ReadOnlyField(source='owner.email')
     
     class Meta:
         model = Gallery
-        fields = ('id', 'name','number_of_images')
-        read_only_fields = ('id','number_of_images')
+        fields = ('id', 'name','number_of_images', 'owner')
+        read_only_fields = ('id','number_of_images', 'owner')
 
     def validate_name(self, value):
         user = self.context['request'].user

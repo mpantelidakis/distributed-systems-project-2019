@@ -25,10 +25,11 @@ from rest_auth.views import LoginView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('user.api.urls')),
-    path('api/gallery/', include('gallery.urls')),
+    path('api/gallery/', include('gallery.api.urls', namespace='gallery-api')),
     path('api/friends/', include('friends.api.urls', namespace='friends-api')),
     path('api/comment/', include('comment.urls')),
     path('friends/', include('friends.urls', namespace='friends')),
+    path('galleries/', include('gallery.urls', namespace='gallery')),
     # path('user/', include('user.urls')),
     
     path('rest-auth/logout/', LogoutViewEx.as_view(), name='rest_logout', ),
