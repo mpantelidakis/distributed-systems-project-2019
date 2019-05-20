@@ -22,7 +22,7 @@
                 Please log in to continue.
             </div>
             <div class='column col-3'>
-                <button class="btn btn-primary"  id='loginButton'>Login</button>
+                <button class="btn btn-primary"  id='id_login_button'>Login</button>
             </div>
         </div>
         <div class="columns" id="logged-in">
@@ -30,18 +30,31 @@
                 Welcome <span id='span-username'></span>!
             </div>
             <div class='column col-3'>
-                <button class="btn btn-primary"  id='logoutButton'>Logout</button>
+                <button class="btn btn-primary"  id='id_logout_button'>Logout</button>
             </div>
         </div>
         <hr />
-        <div class="columns" id="test">
+        <div class="columns" id="id_sign_up">
             <div class='column col-3'>
-                <button class="btn btn-primary"  id='testAuthButton'>Test-authentication</button>
+                Don't have an account?
+            </div>
+            <div class='column col-3'>
+                <button class="btn btn-primary" id='id_sign_up_button'>Sign Up</button>
             </div>
             <div class='column col-9'>
                 <div id='test-auth-response' ></div>
             </div>
         </div>
+        <hr />
+        <div class="columns" id="test">
+            <div class='column col-3'>
+                <button class="btn btn-primary"  id='id_test_auth_button'>Test-authentication</button>
+            </div>
+            <div class='column col-9'>
+                <div id='test-auth-response' ></div>
+            </div>
+        </div>
+        <hr />
         <div class="columns" id="test">
             <div class='column col-3'>
                 <a class="btn btn-primary" href='{% url "friends:manage" %}'>Manage friends</a>
@@ -52,7 +65,7 @@
         </div>
     </div>
     
-    <div class="modal" id="login-modal">
+    <div class="modal" id="id_login_modal">
         <a href="#close" class="modal-overlay close-modal" aria-label="Close"></a>
         <div class="modal-container">
             <div class="modal-header">
@@ -64,12 +77,12 @@
                     <form>
                         {% csrf_token %}
                         <div class="form-group">
-                            <label class="form-label" for="input-username">Email</label>
-                            <input class="form-input" type="text" id="input-username" placeholder="Email">
+                            <label class="form-label" for="id_login_input_email">Email</label>
+                            <input class="form-input" type="text" id="id_login_input_email" placeholder="Email">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="input-password">Password</label>
-                            <input class="form-input" type="password" id="input-password" placeholder="Password">
+                            <label class="form-label" for="id_login_input_password">Password</label>
+                            <input class="form-input" type="password" id="id_login_input_password" placeholder="Password">
                         </div>
                         <div class="form-group">
                             <label class="form-checkbox" for="input-local-storage">
@@ -77,14 +90,50 @@
                             </label>
                         </div>
                     </form>
-                    <div class='label label-error mt-1 d-invisible' id='modal-error'>
+                    <div class='label label-error mt-1 d-invisible' id='id_login_modal_error'>
                         Unable to login!
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 
-                <button class="btn btn-primary" id='loginOkButton' >Ok</button>
+                <button class="btn btn-primary" id='id_login_ok_button' >Ok</button>
+                <a href="#close" class="btn close-modal" >Close</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="id_sign_up_modal">
+        <a href="#close" class="modal-overlay close-modal" aria-label="Close"></a>
+        <div class="modal-container">
+            <div class="modal-header">
+                <a href="#close" class="btn btn-clear float-right close-modal" aria-label="Close"></a>
+                <div class="modal-title h5">Please Sign Up</div>
+            </div>
+            <div class="modal-body">
+                <div class="content">
+                    <form>
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label class="form-label" for="id_sign_up_input_email">Email</label>
+                            <input class="form-input" type="text" id="id_sign_up_input_email" placeholder="Email">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="id_sign_up_input_password">Password</label>
+                            <input class="form-input" type="password" id="id_sign_up_input_password" placeholder="Password">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="id_sign_up_input_username">Username</label>
+                            <input class="form-input" type="text" id="id_sign_up_input_username" placeholder="Username">
+                        </div>
+                    </form>
+                    <div class='label label-error mt-1 d-invisible' id='id_sign_up_modal_error'>
+                        Unable to register with provided credentials!
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id='id_sign_up_ok_button' >Sign me up!</button>
                 <a href="#close" class="btn close-modal" >Close</a>
             </div>
         </div>
@@ -93,6 +142,7 @@
     <script src='{% static "jquery-3.3.1.min.js" %}' ></script>
     <script>
         var g_urls = {
+            'signup': '{% url "user-api:create" %}',
             'login': '{% url "rest_login" %}',
             'logout': '{% url "rest_logout" %}',
             'test_auth': '{% url "test_auth" %}',
@@ -150,15 +200,24 @@
         $(function () {
             initLogin(); 
 
-            $('#loginButton').click(function() {
-                $('#login-modal').addClass('active');
+            $('#id_login_button').click(function() {
+                $('#id_login_modal').addClass('active');
             });
             
-            $('.close-modal').click(function() {
-                $('#login-modal').removeClass('active');
+            $('#id_login_modal .close-modal').click(function() {
+                $('#id_login_modal').removeClass('active');
             });
 
-            $('#testAuthButton').click(function() {
+            $('#id_sign_up_button').click(function() {
+                $('#id_sign_up_modal').addClass('active');
+            });
+            
+            $('#id_sign_up_modal .close-modal').click(function() {
+                $('#id_sign_up_modal').removeClass('active');
+            });
+
+
+            $('#id_test_auth_button').click(function() {
                 $.ajax({
                     url: g_urls.test_auth, 
                     method: "GET", 
@@ -174,13 +233,13 @@
                 });
             });
             
-            $('#loginOkButton').click(function() {
-                var username = $('#input-username').val();
-                var password = $('#input-password').val();
+            $('#id_login_ok_button').click(function() {
+                var username = $('#id_login_input_email').val();
+                var password = $('#id_login_input_password').val();
                 var remember_me = $('#input-local-storage').prop('checked');
                 if(username && password) {
                     console.log("Will try to login with ", username, password);
-                    $('#modal-error').addClass('d-invisible');
+                    $('#id_login_modal_error').addClass('d-invisible');
                     $.ajax({
                         url: g_urls.login, 
                         method: "POST", 
@@ -196,20 +255,48 @@
                             key: data.key,
                             remember_me: remember_me
                         };
-                        $('#login-modal').removeClass('active');
+                        $('#id_login_modal').removeClass('active');
                         initLogin();
                         // CAREFUL! csrf token is rotated after login: https://docs.djangoproject.com/en/1.7/releases/1.5.2/#bugfixes
                         g_csrftoken = getCookie('csrftoken');
                     }).fail(function(data) {
                         console.log("FAIL", data);
-                        $('#modal-error').removeClass('d-invisible');
+                        $('#id_login_modal_error').removeClass('d-invisible').text(data.responseText);
                     });
                 } else {
-                    $('#modal-error').removeClass('d-invisible');
+                    $('#id_login_modal_error').removeClass('d-invisible');
                 }
             });
 
-            $('#logoutButton').click(function() {
+            $('#id_sign_up_ok_button').click(function() {
+                var email = $('#id_sign_up_input_email').val();
+                var password = $('#id_sign_up_input_password').val();
+                var name = $('#id_sign_up_input_username').val();
+                if(email && password && name) {
+                    console.log("Will try to create an account with credentials: "+email+password+name);
+                    $('#id_sign_up_modal_error').addClass('d-invisible');
+                    $.ajax({
+                        url: g_urls.signup, 
+                        method: "POST", 
+                        data: {
+                            email: email,
+                            password: password,
+                            name: name,
+                            csrfmiddlewaretoken: g_csrftoken
+                        }
+                    }).done(function(data) {
+                        console.log("DONE: ", data);
+                        $('#id_sign_up_modal').removeClass('active');
+                    }).fail(function(data) {
+                        console.log("FAIL", data);
+                        $('#id_sign_up_modal_error').removeClass('d-invisible');
+                    });
+                } else {
+                    $('#id_sign_up_modal_error').removeClass('d-invisible');
+                }
+            });
+
+            $('#id_logout_button').click(function() {
                 console.log("Trying to logout");
                 $.ajax({
                     url: g_urls.logout, 

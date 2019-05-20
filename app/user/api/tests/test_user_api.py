@@ -6,9 +6,9 @@ from rest_framework.test import APIClient
 from rest_framework import status
 
 # urls used for http post requests
-CREATE_USER_URL = reverse('user:create')
-TOKEN_URL = reverse('user:token')
-ME_URL = reverse('user:me')
+CREATE_USER_URL = reverse('user-api:create')
+TOKEN_URL = reverse('user-api:token')
+ME_URL = reverse('user-api:me')
 
 
 # ** stands for dymanic list, we can use as many parameters as we want

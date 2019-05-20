@@ -173,6 +173,8 @@ def post_save_user_model_receiver(sender, instance, created, *args, **kwargs):
         except:
             pass
 
+post_save.connect(post_save_user_model_receiver, sender=settings.AUTH_USER_MODEL)
+
 
         
 # class FriendRequest(models.Model):

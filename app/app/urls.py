@@ -24,16 +24,16 @@ from rest_auth.views import LoginView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/user/', include('user.api.urls')),
+    path('api/user/', include('user.api.urls', namespace='user-api')),
     path('api/gallery/', include('gallery.api.urls', namespace='gallery-api')),
     path('api/friends/', include('friends.api.urls', namespace='friends-api')),
     path('api/comment/', include('comment.urls')),
     path('friends/', include('friends.urls', namespace='friends')),
     path('galleries/', include('gallery.urls', namespace='gallery')),
-    # path('user/', include('user.urls')),
+    path('rest-auth/logout/', LogoutViewEx.as_view(), name='rest_logout'),
+    path('rest-auth/login/', LoginView.as_view(), name='rest_login'),
     
-    path('rest-auth/logout/', LogoutViewEx.as_view(), name='rest_logout', ),
-    path('rest-auth/login/', LoginView.as_view(), name='rest_login', ),
+    
     path('', HomeTemplateView.as_view(), name='home', ),
     path('test_auth/', TestAuthView.as_view(), name='test_auth', ),
     

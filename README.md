@@ -5,8 +5,6 @@ add the .env and .env.db files to the root folder
 
 run docker-compose up
 
-user registration is only possible via the api atm at localhost:1337/api/user/create
-
 available urls:
 
 localhost:1337  -homepage, login, logout
