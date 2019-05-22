@@ -15,6 +15,12 @@ from django.template.defaultfilters import slugify
 import itertools
 from django.utils import timezone
 
+from django.core.files.storage import FileSystemStorage
+# upload_storage1 = FileSystemStorage(location=settings.UPLOAD_ROOT, base_url=settings.UPLOAD_URL1)
+# upload_storage2 = FileSystemStorage(location=settings.UPLOAD_ROOT, base_url=settings.UPLOAD_URL2)
+# upload_storage3 = FileSystemStorage(location=settings.UPLOAD_ROOT, base_url=settings.UPLOAD_URL3)
+# upload_storage4 = FileSystemStorage(location=settings.UPLOAD_ROOT, base_url=settings.UPLOAD_URL4)
+# upload_storage5 = FileSystemStorage(location=settings.UPLOAD_ROOT, base_url=settings.UPLOAD_URL5)
 
 
 def image_file_path(instance, filename):
@@ -26,6 +32,7 @@ def image_file_path(instance, filename):
     # helper function that allows us to reliably join
     # 2 strings together to create a valid path
     return os.path.join('uploads/gallery', filename)
+    # return 'images/' + filename
 
 
 class UserManager(BaseUserManager):
@@ -102,7 +109,10 @@ class UploadedImage(models.Model):
         on_delete=models.CASCADE,
     )
     tags = models.ManyToManyField('Tag')
-    image = models.ImageField(blank=True, upload_to=image_file_path)
+    image = models.ImageField(
+        blank=True,
+        upload_to=image_file_path
+    )
 
     # define the string representation of the model
     def __str__(self):
@@ -111,6 +121,10 @@ class UploadedImage(models.Model):
     @property
     def owner(self):
         return self.user
+    
+    def get_image_file_name(self):
+        return self.image
+
 
 
 class Gallery(models.Model):

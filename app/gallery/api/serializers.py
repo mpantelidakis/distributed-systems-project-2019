@@ -2,6 +2,9 @@ from rest_framework import serializers
 
 from core.models import Tag, UploadedImage, Gallery
 
+from django.conf import settings
+import random
+
 
 class TagSerializer(serializers.ModelSerializer):
     """Serializer for tag objects"""
@@ -47,7 +50,7 @@ class ImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UploadedImage
-        fields = ('id', 'name', 'tags', 'gallery', 'image',)
+        fields = ('id', 'name', 'tags', 'gallery', 'image')
         read_only_fields = ('id',)
 
 
@@ -87,11 +90,38 @@ class GallerySerializer(serializers.ModelSerializer):
         """Get the number of images uploaded to the gallery"""
         return obj.images.count()
 
+class ImageDetailSerializer(serializers.ModelSerializer):
+
+    image = serializers.SerializerMethodField()
+
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all()
+    )
+    gallery = GalleryFilteredPrimaryKeyRelatedField(
+        queryset=Gallery.objects.all()
+    )
+
+    class Meta:
+        model = UploadedImage
+        fields = ('id', 'name', 'gallery', 'tags','image')
+        read_only_fields = ('id',)
+    
+    # Image path depending on the nginx containers
+    def get_image(self,obj):
+        current_path = self.context['request'].get_host()
+        relative_path = obj.get_image_file_name()
+        port = random.randint(1337,1341)
+        print(port)
+        current_path=current_path.replace('8000', str(port), 1)
+        newpath = 'http://'+current_path+ settings.MEDIA_URL + str(relative_path)
+        return newpath
+
 
 class GalleryDetailSerializer(serializers.ModelSerializer):
     """Serializer for gallery objects"""
 
-    images = ImageSerializer(many=True)
+    images = ImageDetailSerializer(many=True)
     owner = serializers.ReadOnlyField(source='owner.email')
 
     class Meta:
@@ -118,3 +148,13 @@ class ImageDetailSerializerNoImageField(serializers.ModelSerializer):
         model = UploadedImage
         fields = ('id', 'name', 'gallery', 'tags')
         read_only_fields = ('id',)
+
+    # image names should be unique. why? because!
+    def validate_name(self, value):
+        user = self.context['request'].user
+        qs = UploadedImage.objects.filter(name__iexact=value, user=user)
+        if self.instance:
+            qs = qs.exclude(id=self.instance.id)
+        if qs.exists():
+            raise serializers.ValidationError("This image already exists")
+        return value

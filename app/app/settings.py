@@ -157,6 +157,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "staticfiles"),
 ]
 
+# UPLOAD_ROOT = '/vol/web/media/'
+# UPLOAD_URL = '/uploads/'
 
 # When collectstatic is run, django collects all
 # static files from any dependency that we have
