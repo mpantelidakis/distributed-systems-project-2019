@@ -27,7 +27,7 @@ services:
     volumes:
       - my-datavolume:/var/lib/postgresql/data
   nginx1:
-    build: ./nginx1
+    build: ./nginx
     volumes:
       - static_volume:/vol/web/static
       - media_volume:/vol/web/media
@@ -36,7 +36,7 @@ services:
     depends_on:
       - app
   nginx2:
-    build: ./nginx2
+    build: ./nginx
     volumes:
       - static_volume:/vol/web/static
       - media_volume:/vol/web/media
@@ -45,7 +45,7 @@ services:
     depends_on:
       - app
   nginx3:
-    build: ./nginx3
+    build: ./nginx
     volumes:
       - static_volume:/vol/web/static
       - media_volume:/vol/web/media
@@ -54,7 +54,7 @@ services:
     depends_on:
       - app
   nginx4:
-    build: ./nginx4
+    build: ./nginx
     volumes:
       - static_volume:/vol/web/static
       - media_volume:/vol/web/media
@@ -63,7 +63,7 @@ services:
     depends_on:
       - app
   nginx5:
-    build: ./nginx5
+    build: ./nginx
     volumes:
       - static_volume:/vol/web/static
       - media_volume:/vol/web/media
