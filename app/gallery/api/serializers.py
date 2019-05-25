@@ -92,8 +92,6 @@ class GallerySerializer(serializers.ModelSerializer):
 
 class ImageDetailSerializer(serializers.ModelSerializer):
 
-    image = serializers.SerializerMethodField()
-
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all()
@@ -106,16 +104,6 @@ class ImageDetailSerializer(serializers.ModelSerializer):
         model = UploadedImage
         fields = ('id', 'name', 'gallery', 'tags','image')
         read_only_fields = ('id',)
-    
-    # Image path depending on the nginx containers
-    def get_image(self,obj):
-        current_path = self.context['request'].get_host()
-        relative_path = obj.get_image_file_name()
-        port = random.randint(1337,1341)
-        print(port)
-        current_path=current_path.replace('8000', str(port), 1)
-        newpath = 'http://'+current_path+ settings.MEDIA_URL + str(relative_path)
-        return newpath
 
 
 class GalleryDetailSerializer(serializers.ModelSerializer):
