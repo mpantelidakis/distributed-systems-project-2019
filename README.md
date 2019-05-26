@@ -36,6 +36,6 @@ available urls:
 
 - [ ] Remove all js from the templates and import it
 
-- [ ] Use django's template inheritance
+- [x] Use django's template inheritance
 
 - [ ] Write proper css :muscle:
