@@ -1,240 +1,154 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-  <meta charset="utf-8">
-  <meta name="robots" content="index, follow">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Manage Friends</title>
-  <link rel="stylesheet" href='{% static "spectre.min.css" %}'>
-  <link rel="stylesheet" href='{% static "spectre-icons.min.css" %}'>
-  <link rel="icon" href="{% static 'favicon.ico' %}">
-  <style>
-  </style>
-</head>
+{% block title%}<title>Manage friends</title>{% endblock %}
 
-<body>
+{% block content %}
+<div id="id_login_required"></div>
+<h2 id="id_list_available" class="header-h2">List of available people to follow:</h2>
+<div id='id_get_profiles_response' class="api_response"></div>
+<div id="id_available_people_list" class="people_list"></div>
+<div id='id_add_friend_response' class="api_response"></div>
+<h2 id="id_list_friends" class="header-h2">List of people you are already following:</h2>
+<div id='id_get_friends_response' class="api_response"></div>
+<div id="id_friend_list" class="people_list"></div>
+<div id='id_delete_friend_response' class="api_response"></div>
+
+<div class='column col-3'>
+    <a class="btn btn-primary" href='{% url "gallery:list" %}'>View galleries</a>
+</div>
+<div class='column col-3'>
+    <a class="btn btn-primary" href='{% url "home" %}'>Back to home page</a>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+    var g_urls = {
+        'available_profiles': "{% url 'friends-api:profile-list' %}",
+    };
+    var g_auth = localStorage.getItem("auth");
+    if(g_auth == null) {
+        g_auth = sessionStorage.getItem("auth");
+    }
     
-    <div id="id_login_required"></div>
-    <h2 id="id_list_available" class="header-h2">List of available people to follow:</h2>
-    <div id='id_get_profiles_response' class="api_response"></div>
-    <div id="id_available_people_list" class="people_list"></div>
-    <div id='id_add_friend_response' class="api_response"></div>
-    <h2 id="id_list_friends" class="header-h2">List of people you are already following:</h2>
-    <div id='id_get_friends_response' class="api_response"></div>
-    <div id="id_friend_list" class="people_list"></div>
-    <div id='id_delete_friend_response' class="api_response"></div>
+    if(g_auth) {
+        try {
+            g_auth = JSON.parse(g_auth);
+            var myProfileSlag = g_auth.username.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
+            var my_profile_url = "/api/friends/profiles/" + myProfileSlag +'/';
+        } catch(error) {
+            g_auth = null; 
+        }
+    }
 
-    <div class='column col-3'>
-        <a class="btn btn-primary" href='{% url "gallery:list" %}'>View galleries</a>
-    </div>
-    <div class='column col-3'>
-        <a class="btn btn-primary" href='{% url "home" %}'>Back to home page</a>
-    </div>
+    var getCookie = function(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    };
+    var g_csrftoken = getCookie('csrftoken');
+
+    $(document).ready(function(){ 
+
+        //Neat for development, since we know the token for the headers, testing the API
+        if(g_auth){
+            console.log(g_auth);
+            ajaxPopulateFriends();
+        }
+        else{
+            $("#id_login_required").html("<span class='label label-error'>Fail! Please log in to continue </span>");
+            $("#id_list_available").hide();
+            $("#id_list_friends").hide();
+        }
+    }); //FUNCTION THAT RUNS AFTER DOCUMENT LOADS ENDING
+
+    //GET PEOPLE WE ARE ALREADY FOLLOWING
+    function ajaxPopulateFriends(){
+        $.ajax({
+            dataType : "json",
+            url: my_profile_url,
+            method: "GET",
+            data: {friends:"friends"},
+            beforeSend: function(request) {
+                if(g_auth) {
+                    request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                }
+            }
+        }).done(function(data) {
+            $(data.friends).each(function(i,item) {
+                var userslag = JSON.stringify(item);
+                var userProfileSlag = userslag.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
+                
+                $("<li/>").attr("class","item item_friend_added").html($("<a>").attr("href",window.location.href+userProfileSlag).text(item)).appendTo('#id_friend_list');
+
+                $("<button/>").attr({"value": item, "class": "btn btn_delete_friend btn-error btn-sm"}).text("Delete Friend").appendTo('#id_friend_list');
+            });
+            $('#id_get_friends_response').html("<span class='label label-success'>Ok! Response: " + JSON.stringify(data));
+            ajaxPopulateAvailablePeople(data);
+        }).fail(function(data) {
+            $('#id_get_friends_response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
+        });
+    }
+
+    //GET AVAILABLE PEOPLE TO FOLLOW
+    function ajaxPopulateAvailablePeople(my_profile_data){
     
-  
-    <script src='{% static "jquery-3.3.1.min.js" %}' ></script>
-    <script>
-        var g_urls = {
-            'available_profiles': "{% url 'friends-api:profile-list' %}",
-        };
-        var g_auth = localStorage.getItem("auth");
-        if(g_auth == null) {
-            g_auth = sessionStorage.getItem("auth");
-        }
-        
-        if(g_auth) {
-            try {
-                g_auth = JSON.parse(g_auth);
-                var myProfileSlag = g_auth.username.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
-                var my_profile_url = "/api/friends/profiles/" + myProfileSlag +'/';
-            } catch(error) {
-                g_auth = null; 
-            }
-        }
-
-        var getCookie = function(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = jQuery.trim(cookies[i]);
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
+        $.ajax({
+            dataType : "json",
+            url: g_urls.available_profiles, 
+            method: "GET",
+            beforeSend: function(request) {
+                if(g_auth) {
+                    request.setRequestHeader("Authorization", "Token " + g_auth.key);
                 }
-            }
-            return cookieValue;
-        };
-        var g_csrftoken = getCookie('csrftoken');
+            },
+        }).done(function(data) {
+            $('#id_get_profiles_response').html("<span class='label label-success'>Ok! Response: " + JSON.stringify(data));
+            comparedata(data, my_profile_data);
+        }).fail(function(data) {
+            $('#id_get_profiles_response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
+            error = true;
+        });
+    }
 
-        $(document).ready(function(){ 
-  
-            //Neat for development, since we know the token for the headers, testing the API
-            if(g_auth){
-                console.log(g_auth);
-                ajaxPopulateFriends();
-            }
-            else{
-                $("#id_login_required").html("<span class='label label-error'>Fail! Please log in to continue </span>");
-                $("#id_list_available").hide();
-                $("#id_list_friends").hide();
-            }
-        }); //FUNCTION THAT RUNS AFTER DOCUMENT LOADS ENDING
+    function comparedata(user_data, my_profile_data){
+        // console.log("Users: ");
+        // $.each(user_data, function(i, item){
+        //     console.log(item.user);
+        // });
 
-        //GET PEOPLE WE ARE ALREADY FOLLOWING
-        function ajaxPopulateFriends(){
-            $.ajax({
-                dataType : "json",
-                url: my_profile_url,
-                method: "GET",
-                data: {friends:"friends"},
-                beforeSend: function(request) {
-                    if(g_auth) {
-                        request.setRequestHeader("Authorization", "Token " + g_auth.key);
-                    }
-                }
-            }).done(function(data) {
-                $(data.friends).each(function(i,item) {
-                    var userslag = JSON.stringify(item);
-                    var userProfileSlag = userslag.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
-                    
-                    $("<li/>").attr("class","item item_friend_added").html($("<a>").attr("href",window.location.href+userProfileSlag).text(item)).appendTo('#id_friend_list');
+        // console.log("Friends: ");
+        // $.each(my_profile_data.friends, function(i, item){
+        //     console.log(item);
+        // });
 
-                    $("<button/>").attr({"value": item, "class": "btn btn_delete_friend btn-error btn-sm"}).text("Delete Friend").appendTo('#id_friend_list');
-                });
-                $('#id_get_friends_response').html("<span class='label label-success'>Ok! Response: " + JSON.stringify(data));
-                ajaxPopulateAvailablePeople(data);
-            }).fail(function(data) {
-                $('#id_get_friends_response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
+        $.each(user_data, function(i, item){
+            var user_already_in_friends = my_profile_data.friends.find(function(element) {
+                return element == item.user;
             });
-        }
+            if(!user_already_in_friends){
+                $("<li/>").attr("class","item item_user_available").html($("<a>").attr("href",window.location.href+item.slug).text(item.user)).appendTo('#id_available_people_list');
+                $("<button/>").attr({"value": item.user, "class": "btn btn_add_friend btn-success btn-sm"}).text("Add Friend").appendTo('#id_available_people_list');
+            }
+        });
+    }
 
-        //GET AVAILABLE PEOPLE TO FOLLOW
-        function ajaxPopulateAvailablePeople(my_profile_data){
-        
-            $.ajax({
-                dataType : "json",
-                url: g_urls.available_profiles, 
-                method: "GET",
-                beforeSend: function(request) {
-                    if(g_auth) {
-                        request.setRequestHeader("Authorization", "Token " + g_auth.key);
-                    }
-                },
-            }).done(function(data) {
-                $('#id_get_profiles_response').html("<span class='label label-success'>Ok! Response: " + JSON.stringify(data));
-                comparedata(data, my_profile_data);
-            }).fail(function(data) {
-                $('#id_get_profiles_response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
-                error = true;
-            });
-        }
-
-        function comparedata(user_data, my_profile_data){
-            // console.log("Users: ");
-            // $.each(user_data, function(i, item){
-            //     console.log(item.user);
-            // });
-
-            // console.log("Friends: ");
-            // $.each(my_profile_data.friends, function(i, item){
-            //     console.log(item);
-            // });
-
-            $.each(user_data, function(i, item){
-                var user_already_in_friends = my_profile_data.friends.find(function(element) {
-                    return element == item.user;
-                });
-                if(!user_already_in_friends){
-                    $("<li/>").attr("class","item item_user_available").html($("<a>").attr("href",window.location.href+item.slug).text(item.user)).appendTo('#id_available_people_list');
-                    $("<button/>").attr({"value": item.user, "class": "btn btn_add_friend btn-success btn-sm"}).text("Add Friend").appendTo('#id_available_people_list');
-                }
-            });
-        }
-
-        //ADD FRIEND FUNCTIONALITY
-        $('#id_available_people_list').on('click', '.btn_add_friend', function(){
-               
-               user_to_add = $(this).val();
-               // console.log(user_to_add);
-   
-               $.ajax({
-                   dataType : "json",
-                   url: my_profile_url,
-                   method: "GET",
-                   data:{friends: "friends"},
-                   beforeSend: function(request) {
-                       if(g_auth) {
-                           request.setRequestHeader("Authorization", "Token " + g_auth.key);
-                       }
-                   }
-               }).done(function(data) {
-
-                   var user_already_in_friends = data['friends'].find(function(element) {
-                       return element == user_to_add;
-                   });
-
-                   if(!user_already_in_friends){
-                       data['friends'].push(user_to_add);
-                       data = JSON.stringify(data);
-                       $.ajax({
-                            contentType:"application/json",
-                            url: my_profile_url,
-                            method: "PUT",
-                            data: data,
-                            beforeSend: function(request) {
-                                if(g_auth) {
-                                    request.setRequestHeader("Authorization", "Token " + g_auth.key);
-                                }
-                            }
-                       }).done(function(data) {
-                            console.log(data['friends']);
-                            
-                            var userslag = user_to_add;
-                            var userProfileSlag = userslag.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
-
-                            //REMOVE the added user from our available people list
-                            $(".item_user_available:contains('" + user_to_add + "')").remove();
-                            $('.btn_add_friend').filter(function(){return this.value==user_to_add}).remove();
-
-                            //ADD the newly added user to our html friend list
-                            $("<li/>").attr("class","item item_friend_added").html($("<a>").attr("href",window.location.href+userProfileSlag).text(user_to_add)).appendTo('#id_friend_list');
-                            $("<button/>").attr({"value": user_to_add, "class": "btn btn_delete_friend btn-error btn-sm"}).text("Delete Friend").appendTo('#id_friend_list');
-
-
-                            $('#id_add_friend_response').html("<span class='label label-success'>Added! New friends: " + data['friends']);
-                       }).fail(function(data, textStatus, errorThrown) {
-                            console.log("The following error occured: " + textStatus, errorThrown);
-                            if (textStatus=="error")
-                                $('#id_add_friend_response').html("<span class='label label-error'>Fail! Status: "+ textStatus +" (error thrown : " +errorThrown +")</span>");
-                            $('#id_add_friend_response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
-                       });
-                    }
-                    else{
-                        console.log("User Already in your friends");
-                        $('#id_add_friend_response').html("<span class='label label-warning'>Fail! This user is already in your friends!</span>");
-                    }
-       
-               }).fail(function(data, textStatus, errorThrown) {
-                   console.log("The following error occured: " + textStatus, errorThrown);
-                   if (textStatus=="error")
-                       $('#id_add_friend_response').html("<span class='label label-error'>Fail! Status: "+ textStatus +" (error thrown : " +errorThrown +")</span>");
-                   $('#id_add_friend_responsee').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
-               });
-               
-           }); //FUNCTION ENDING
-
-
-        //DELETE FRIEND FUNCTIONALITY
-        $('#id_friend_list').on('click', '.btn_delete_friend', function(){
-               
-               
-            user_to_delete = $(this).val();
-            console.log(user_to_delete);
+    //ADD FRIEND FUNCTIONALITY
+    $('#id_available_people_list').on('click', '.btn_add_friend', function(){
+            
+            user_to_add = $(this).val();
+            // console.log(user_to_add);
 
             $.ajax({
                 dataType : "json",
@@ -248,18 +162,12 @@
                 }
             }).done(function(data) {
 
-                console.log("AFTER GET BEFORE PUT:" +data['friends']);
-
                 var user_already_in_friends = data['friends'].find(function(element) {
-                    return element == user_to_delete;
+                    return element == user_to_add;
                 });
 
-                if(user_already_in_friends){
-                    var index = data['friends'].indexOf(user_to_delete);
-                    if (index !== -1) {
-                        data['friends'].splice(index, 1);
-                    }
-                    console.log("AFTER POPPING:" +data['friends']);
+                if(!user_already_in_friends){
+                    data['friends'].push(user_to_add);
                     data = JSON.stringify(data);
                     $.ajax({
                         contentType:"application/json",
@@ -272,42 +180,121 @@
                             }
                         }
                     }).done(function(data) {
-                        console.log("AFTER PUT: "+data['friends']);
-                        //REMOVE the deleted user from our html friend list
-                        var userslag = user_to_delete;
+                        console.log(data['friends']);
+                        
+                        var userslag = user_to_add;
                         var userProfileSlag = userslag.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
 
-                        //REMOVE the deleted user from our friend list
-                        $(".item_friend_added:contains('" + user_to_delete + "')").remove();
-                        $('.btn_delete_friend').filter(function(){return this.value==user_to_delete}).remove();
+                        //REMOVE the added user from our available people list
+                        $(".item_user_available:contains('" + user_to_add + "')").remove();
+                        $('.btn_add_friend').filter(function(){return this.value==user_to_add}).remove();
 
-                        //ADD the deleted user back to the avaiable people list
-                        $("<li/>").attr("class","item item_user_available").html($("<a>").attr("href",window.location.href+userProfileSlag).text(user_to_delete)).appendTo('#id_available_people_list');
-                        $("<button/>").attr({"value": user_to_delete, "class": "btn btn_add_friend btn-success btn-sm"}).text("Add Friend").appendTo('#id_available_people_list');
-                        
-                        $('#id_delete_friend_response').html("<span class='label label-success'>Deleted! New friends: " + data['friends']);
+                        //ADD the newly added user to our html friend list
+                        $("<li/>").attr("class","item item_friend_added").html($("<a>").attr("href",window.location.href+userProfileSlag).text(user_to_add)).appendTo('#id_friend_list');
+                        $("<button/>").attr({"value": user_to_add, "class": "btn btn_delete_friend btn-error btn-sm"}).text("Delete Friend").appendTo('#id_friend_list');
 
+
+                        $('#id_add_friend_response').html("<span class='label label-success'>Added! New friends: " + data['friends']);
                     }).fail(function(data, textStatus, errorThrown) {
                         console.log("The following error occured: " + textStatus, errorThrown);
                         if (textStatus=="error")
-                            $('#id_delete_friend_response').html("<span class='label label-error'>Fail! Status: "+ textStatus +" (error thrown : " +errorThrown +")</span>");
-                        $('#id_delete_friend_response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
+                            $('#id_add_friend_response').html("<span class='label label-error'>Fail! Status: "+ textStatus +" (error thrown : " +errorThrown +")</span>");
+                        $('#id_add_friend_response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
                     });
                 }
                 else{
-                    console.log("This user is not your friend");
-                    $('#id_delete_friend_response').html("<span class='label label-warning'>Fail! This user is not your friend!</span>");
+                    console.log("User Already in your friends");
+                    $('#id_add_friend_response').html("<span class='label label-warning'>Fail! This user is already in your friends!</span>");
                 }
     
             }).fail(function(data, textStatus, errorThrown) {
                 console.log("The following error occured: " + textStatus, errorThrown);
                 if (textStatus=="error")
-                    $('#id_delete_friend_response').html("<span class='label label-error'>Fail! Status: "+ textStatus +" (error thrown : " +errorThrown +")</span>");
-                $('#id_delete_friend_responsee').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
+                    $('#id_add_friend_response').html("<span class='label label-error'>Fail! Status: "+ textStatus +" (error thrown : " +errorThrown +")</span>");
+                $('#id_add_friend_responsee').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
             });
             
         }); //FUNCTION ENDING
 
-    </script>
-</body>
-</html>
+
+    //DELETE FRIEND FUNCTIONALITY
+    $('#id_friend_list').on('click', '.btn_delete_friend', function(){
+            
+            
+        user_to_delete = $(this).val();
+        console.log(user_to_delete);
+
+        $.ajax({
+            dataType : "json",
+            url: my_profile_url,
+            method: "GET",
+            data:{friends: "friends"},
+            beforeSend: function(request) {
+                if(g_auth) {
+                    request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                }
+            }
+        }).done(function(data) {
+
+            console.log("AFTER GET BEFORE PUT:" +data['friends']);
+
+            var user_already_in_friends = data['friends'].find(function(element) {
+                return element == user_to_delete;
+            });
+
+            if(user_already_in_friends){
+                var index = data['friends'].indexOf(user_to_delete);
+                if (index !== -1) {
+                    data['friends'].splice(index, 1);
+                }
+                console.log("AFTER POPPING:" +data['friends']);
+                data = JSON.stringify(data);
+                $.ajax({
+                    contentType:"application/json",
+                    url: my_profile_url,
+                    method: "PUT",
+                    data: data,
+                    beforeSend: function(request) {
+                        if(g_auth) {
+                            request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                        }
+                    }
+                }).done(function(data) {
+                    console.log("AFTER PUT: "+data['friends']);
+                    //REMOVE the deleted user from our html friend list
+                    var userslag = user_to_delete;
+                    var userProfileSlag = userslag.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
+
+                    //REMOVE the deleted user from our friend list
+                    $(".item_friend_added:contains('" + user_to_delete + "')").remove();
+                    $('.btn_delete_friend').filter(function(){return this.value==user_to_delete}).remove();
+
+                    //ADD the deleted user back to the avaiable people list
+                    $("<li/>").attr("class","item item_user_available").html($("<a>").attr("href",window.location.href+userProfileSlag).text(user_to_delete)).appendTo('#id_available_people_list');
+                    $("<button/>").attr({"value": user_to_delete, "class": "btn btn_add_friend btn-success btn-sm"}).text("Add Friend").appendTo('#id_available_people_list');
+                    
+                    $('#id_delete_friend_response').html("<span class='label label-success'>Deleted! New friends: " + data['friends']);
+
+                }).fail(function(data, textStatus, errorThrown) {
+                    console.log("The following error occured: " + textStatus, errorThrown);
+                    if (textStatus=="error")
+                        $('#id_delete_friend_response').html("<span class='label label-error'>Fail! Status: "+ textStatus +" (error thrown : " +errorThrown +")</span>");
+                    $('#id_delete_friend_response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
+                });
+            }
+            else{
+                console.log("This user is not your friend");
+                $('#id_delete_friend_response').html("<span class='label label-warning'>Fail! This user is not your friend!</span>");
+            }
+
+        }).fail(function(data, textStatus, errorThrown) {
+            console.log("The following error occured: " + textStatus, errorThrown);
+            if (textStatus=="error")
+                $('#id_delete_friend_response').html("<span class='label label-error'>Fail! Status: "+ textStatus +" (error thrown : " +errorThrown +")</span>");
+            $('#id_delete_friend_responsee').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
+        });
+        
+    }); //FUNCTION ENDING
+
+</script>
+{% endblock %}

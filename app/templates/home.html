@@ -1,145 +1,137 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="robots" content="index, follow">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Home</title>
-  <link rel="stylesheet" href='{% static "spectre.min.css" %}'>
-  <link rel="stylesheet" href='{% static "spectre-icons.min.css" %}'>
-  <link rel="icon" href="{% static 'favicon.ico' %}">
-  <style>
-  </style>
-</head>
-<body>
-    <div class="container grid-lg">
-        <h1>Distributed Systems Project 2019 &#9749</h1>
-        <p>Technical University of Crete</p>
-        <h3>Minas Pantelidakis &#8212 Charalampos Theodoris</h3>
-        <div class="columns" id="non-logged-in">
-            <div class='column col-3'>
-                Please log in to continue.
-            </div>
-            <div class='column col-3'>
-                <button class="btn btn-primary"  id='id_login_button'>Login</button>
-            </div>
-        </div>
-        <div class="columns" id="logged-in">
-            <div class='column col-3'>
-                Welcome <span id='span-username'></span>!
-            </div>
-            <div class='column col-3'>
-                <button class="btn btn-primary"  id='id_logout_button'>Logout</button>
-            </div>
-        </div>
-        <hr />
-        <div class="columns" id="id_sign_up">
-            <div class='column col-3'>
-                Don't have an account?
-            </div>
-            <div class='column col-3'>
-                <button class="btn btn-primary" id='id_sign_up_button'>Sign Up</button>
-            </div>
-            <div class='column col-9'>
-                <div id='test-auth-response' ></div>
-            </div>
-        </div>
-        <hr />
-        <div class="columns" id="test">
-            <div class='column col-3'>
-                <button class="btn btn-primary"  id='id_test_auth_button'>Test-authentication</button>
-            </div>
-            <div class='column col-9'>
-                <div id='test-auth-response' ></div>
-            </div>
-        </div>
-        <hr />
-        <div class="columns" id="test">
-            <div class='column col-3'>
-                <a class="btn btn-primary" href='{% url "friends:manage" %}'>Manage friends</a>
-            </div>
-            <div class='column col-9'>
-                <div id='test-auth-response' ></div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="modal" id="id_login_modal">
-        <a href="#close" class="modal-overlay close-modal" aria-label="Close"></a>
-        <div class="modal-container">
-            <div class="modal-header">
-                <a href="#close" class="btn btn-clear float-right close-modal" aria-label="Close"></a>
-                <div class="modal-title h5">Please login</div>
-            </div>
-            <div class="modal-body">
-                <div class="content">
-                    <form>
-                        {% csrf_token %}
-                        <div class="form-group">
-                            <label class="form-label" for="id_login_input_email">Email</label>
-                            <input class="form-input" type="text" id="id_login_input_email" placeholder="Email">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="id_login_input_password">Password</label>
-                            <input class="form-input" type="password" id="id_login_input_password" placeholder="Password">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-checkbox" for="input-local-storage">
-                                <input type="checkbox" id="input-local-storage" /> <i class="form-icon"></i>  Use local storage (remember me)
-                            </label>
-                        </div>
-                    </form>
-                    <div class='label label-error mt-1 d-invisible' id='id_login_modal_error'>
-                        Unable to login!
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                
-                <button class="btn btn-primary" id='id_login_ok_button' >Ok</button>
-                <a href="#close" class="btn close-modal" >Close</a>
-            </div>
-        </div>
-    </div>
 
-    <div class="modal" id="id_sign_up_modal">
-        <a href="#close" class="modal-overlay close-modal" aria-label="Close"></a>
-        <div class="modal-container">
-            <div class="modal-header">
-                <a href="#close" class="btn btn-clear float-right close-modal" aria-label="Close"></a>
-                <div class="modal-title h5">Please Sign Up</div>
-            </div>
-            <div class="modal-body">
-                <div class="content">
-                    <form>
-                        {% csrf_token %}
-                        <div class="form-group">
-                            <label class="form-label" for="id_sign_up_input_email">Email</label>
-                            <input class="form-input" type="text" id="id_sign_up_input_email" placeholder="Email">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="id_sign_up_input_password">Password</label>
-                            <input class="form-input" type="password" id="id_sign_up_input_password" placeholder="Password">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="id_sign_up_input_username">Username</label>
-                            <input class="form-input" type="text" id="id_sign_up_input_username" placeholder="Username">
-                        </div>
-                    </form>
-                    <div class='label label-error mt-1 d-invisible' id='id_sign_up_modal_error'>
-                        Unable to register with provided credentials!
+{% block title%}<title>Home</title>{% endblock %}
+
+{% block content %}
+<div class="container grid-lg">
+    <h1>Distributed Systems Project 2019 &#9749</h1>
+    <p>Technical University of Crete</p>
+    <h3>Minas Pantelidakis &#8212 Charalampos Theodoris</h3>
+    <div class="columns" id="non-logged-in">
+        <div class='column col-3'>
+            Please log in to continue.
+        </div>
+        <div class='column col-3'>
+            <button class="btn btn-primary"  id='id_login_button'>Login</button>
+        </div>
+    </div>
+    <div class="columns" id="logged-in">
+        <div class='column col-3'>
+            Welcome <span id='span-username'></span>!
+        </div>
+        <div class='column col-3'>
+            <button class="btn btn-primary"  id='id_logout_button'>Logout</button>
+        </div>
+    </div>
+    <hr />
+    <div class="columns" id="id_sign_up">
+        <div class='column col-3'>
+            Don't have an account?
+        </div>
+        <div class='column col-3'>
+            <button class="btn btn-primary" id='id_sign_up_button'>Sign Up</button>
+        </div>
+        <div class='column col-9'>
+            <div id='test-auth-response' ></div>
+        </div>
+    </div>
+    <hr />
+    <div class="columns" id="test">
+        <div class='column col-3'>
+            <button class="btn btn-primary"  id='id_test_auth_button'>Test-authentication</button>
+        </div>
+        <div class='column col-9'>
+            <div id='test-auth-response' ></div>
+        </div>
+    </div>
+    <hr />
+    <div class="columns" id="test">
+        <div class='column col-3'>
+            <a class="btn btn-primary" href='{% url "friends:manage" %}'>Manage friends</a>
+        </div>
+        <div class='column col-9'>
+            <div id='test-auth-response' ></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="id_login_modal">
+    <a href="#close" class="modal-overlay close-modal" aria-label="Close"></a>
+    <div class="modal-container">
+        <div class="modal-header">
+            <a href="#close" class="btn btn-clear float-right close-modal" aria-label="Close"></a>
+            <div class="modal-title h5">Please login</div>
+        </div>
+        <div class="modal-body">
+            <div class="content">
+                <form>
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="form-label" for="id_login_input_email">Email</label>
+                        <input class="form-input" type="text" id="id_login_input_email" placeholder="Email">
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="id_login_input_password">Password</label>
+                        <input class="form-input" type="password" id="id_login_input_password" placeholder="Password">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-checkbox" for="input-local-storage">
+                            <input type="checkbox" id="input-local-storage" /> <i class="form-icon"></i>  Use local storage (remember me)
+                        </label>
+                    </div>
+                </form>
+                <div class='label label-error mt-1 d-invisible' id='id_login_modal_error'>
+                    Unable to login!
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" id='id_sign_up_ok_button' >Sign me up!</button>
-                <a href="#close" class="btn close-modal" >Close</a>
+        </div>
+        <div class="modal-footer">
+            
+            <button class="btn btn-primary" id='id_login_ok_button' >Ok</button>
+            <a href="#close" class="btn close-modal" >Close</a>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="id_sign_up_modal">
+    <a href="#close" class="modal-overlay close-modal" aria-label="Close"></a>
+    <div class="modal-container">
+        <div class="modal-header">
+            <a href="#close" class="btn btn-clear float-right close-modal" aria-label="Close"></a>
+            <div class="modal-title h5">Please Sign Up</div>
+        </div>
+        <div class="modal-body">
+            <div class="content">
+                <form>
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="form-label" for="id_sign_up_input_email">Email</label>
+                        <input class="form-input" type="text" id="id_sign_up_input_email" placeholder="Email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="id_sign_up_input_password">Password</label>
+                        <input class="form-input" type="password" id="id_sign_up_input_password" placeholder="Password">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="id_sign_up_input_username">Username</label>
+                        <input class="form-input" type="text" id="id_sign_up_input_username" placeholder="Username">
+                    </div>
+                </form>
+                <div class='label label-error mt-1 d-invisible' id='id_sign_up_modal_error'>
+                    Unable to register with provided credentials!
+                </div>
             </div>
         </div>
-    </div>    
+        <div class="modal-footer">
+            <button class="btn btn-primary" id='id_sign_up_ok_button' >Sign me up!</button>
+            <a href="#close" class="btn close-modal" >Close</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
     
-    <script src='{% static "jquery-3.3.1.min.js" %}' ></script>
+{% block javascript %}
     <script>
         var g_urls = {
             'signup': '{% url "user-api:create" %}',
@@ -289,7 +281,7 @@
                         $('#id_sign_up_modal').removeClass('active');
                     }).fail(function(data) {
                         console.log("FAIL", data);
-                        $('#id_sign_up_modal_error').removeClass('d-invisible');
+                        $('#id_sign_up_modal_error').removeClass('d-invisible').text(data.responseText);
                     });
                 } else {
                     $('#id_sign_up_modal_error').removeClass('d-invisible');
@@ -320,7 +312,4 @@
         });
         
     </script>
-  
-</body>
-
-</html>
+{% endblock %}

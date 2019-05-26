@@ -1,197 +1,183 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-  <meta charset="utf-8">
-  <meta name="robots" content="index, follow">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Gallery Detail</title>
-  <link rel="stylesheet" href='{% static "spectre.min.css" %}'>
-  <link rel="stylesheet" href='{% static "spectre-icons.min.css" %}'>
-  <link rel="icon" href="{% static 'favicon.ico' %}">
-  <style>
-  </style>
-</head>
+{% block title%}<title>Gallery Detail</title>{% endblock %}
+{% block content %}
+<div id="id_login_required"></div>
+<div id='id_get_gallery_detail_response' class="api_response"></div>
 
-<body>
-    
-    <div id="id_login_required"></div>
-    <div id='id_get_gallery_detail_response' class="api_response"></div>
-
-    <div class="gallery">
-        <h3 class="gallery__header gallery__header--h3">Gallery Details:</h3>
-        <div class="gallery__details">
-            <p class="gallery__details-field" id=id_gallery_name>Name:&nbsp;<span></span></p>
-            <p class="gallery__details-field" id=id_gallery_owner>Owner:&nbsp;<span></span></p>
-        </div>
-        
-        <h2 class="gallery__header gallery__header--h2">Images:</h2>
-        <div class="gallery__image-list" id="id_gallery_image_list" style="max-width:1400px;min-width:900px;margin:0 auto;">
-
-        </div>
-    </div>
-  
-
-    <div class='column col-3'>
-        <a class="btn btn-primary" href='{% url "gallery:list" %}'>Back to gallery list</a>
-    </div>
-    <div class='column col-3'>
-        <a class="btn btn-primary" href='{% url "friends:manage" %}'>Manage Friends</a>
-    </div>
-    <div class='column col-3'>
-        <a class="btn btn-primary" href='{% url "home" %}'>Back to home page</a>
+<div class="gallery">
+    <h3 class="gallery__header gallery__header--h3">Gallery Details:</h3>
+    <div class="gallery__details">
+        <p class="gallery__details-field" id=id_gallery_name>Name:&nbsp;<span></span></p>
+        <p class="gallery__details-field" id=id_gallery_owner>Owner:&nbsp;<span></span></p>
     </div>
     
+    <h2 class="gallery__header gallery__header--h2">Images:</h2>
+    <div class="gallery__image-list" id="id_gallery_image_list" style="max-width:1400px;min-width:900px;margin:0 auto;">
+
+    </div>
+</div>
+
+
+<div class='column col-3'>
+    <a class="btn btn-primary" href='{% url "gallery:list" %}'>Back to gallery list</a>
+</div>
+<div class='column col-3'>
+    <a class="btn btn-primary" href='{% url "friends:manage" %}'>Manage Friends</a>
+</div>
+<div class='column col-3'>
+    <a class="btn btn-primary" href='{% url "home" %}'>Back to home page</a>
+</div>
+{% endblock %}
   
-    <script src='{% static "jquery-3.3.1.min.js" %}' ></script>
-    <script>
-        var gallery_get_url = function() {
-            url = window.location.href
-            first_index = url.lastIndexOf("/");
-            second_index = url.lastIndexOf("/",first_index-1)
-            pk = url.substr(second_index+1);
-            pk = pk.replace("/",'');
-            console.log(pk);
-            var url_mask = "{% url 'gallery-api:gallery-detail' pk=1337 %}".replace(/1337/, pk.toString());
-            return url_mask;
-        };
+{% block javascript %}
+<script>
+    var gallery_get_url = function() {
+        url = window.location.href
+        first_index = url.lastIndexOf("/");
+        second_index = url.lastIndexOf("/",first_index-1)
+        pk = url.substr(second_index+1);
+        pk = pk.replace("/",'');
+        console.log(pk);
+        var url_mask = "{% url 'gallery-api:gallery-detail' pk=1337 %}".replace(/1337/, pk.toString());
+        return url_mask;
+    };
 
-        var gallery_detail_url = gallery_get_url();
-        var comment_list_url = "{% url 'comment-api:comment-list'%}";
-          
-
-        var g_auth = localStorage.getItem("auth");
-        if(g_auth == null) {
-            g_auth = sessionStorage.getItem("auth");
-        }
+    var gallery_detail_url = gallery_get_url();
+    var comment_list_url = "{% url 'comment-api:comment-list'%}";
         
-        if(g_auth) {
-            try {
-                g_auth = JSON.parse(g_auth);
-                var my_username = g_auth.username;
-                var myProfileSlag = my_username.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
-                var my_profile_url = "/api/friends/profiles/" + myProfileSlag +'/';
-            } catch(error) {
-                g_auth = null; 
-            }
-        }
 
-        var getCookie = function(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = jQuery.trim(cookies[i]);
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
+    var g_auth = localStorage.getItem("auth");
+    if(g_auth == null) {
+        g_auth = sessionStorage.getItem("auth");
+    }
+    
+    if(g_auth) {
+        try {
+            g_auth = JSON.parse(g_auth);
+            var my_username = g_auth.username;
+            var myProfileSlag = my_username.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
+            var my_profile_url = "/api/friends/profiles/" + myProfileSlag +'/';
+        } catch(error) {
+            g_auth = null; 
+        }
+    }
+
+    var getCookie = function(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
             }
-            return cookieValue;
-        };
-        var g_csrftoken = getCookie('csrftoken');
+        }
+        return cookieValue;
+    };
+    var g_csrftoken = getCookie('csrftoken');
 
-        $(document).ready(function(){ 
-  
-            //Neat for development, since we know the token for the headers, testing the API
-            if(g_auth){
-                console.log(g_auth);
-                ajaxPopulateGallery();
+    $(document).ready(function(){ 
+
+        //Neat for development, since we know the token for the headers, testing the API
+        if(g_auth){
+            console.log(g_auth);
+            ajaxPopulateGallery();
+        }
+        else{
+            $("#id_login_required").html("<span class='label label-error'>Fail! Please log in to continue </span>");
+            $(".gallery").hide();
+        }
+        
+    }); //FUNCTION THAT RUNS AFTER DOCUMENT LOADS ENDING
+
+    function ajaxPopulateGallery(){
+
+        console.log("Gallery detail url: " + gallery_detail_url);
+        $.ajax({
+            dataType : "json",
+            url: gallery_detail_url,
+            method: "GET",
+            data: {id:"id", name:"name", images:"images", owner:"owner"},
+            beforeSend: function(request) {
+                if(g_auth) {
+                    request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                }
             }
-            else{
-                $("#id_login_required").html("<span class='label label-error'>Fail! Please log in to continue </span>");
-                $(".gallery").hide();
-            }
+        }).done(function(data) {
             
-        }); //FUNCTION THAT RUNS AFTER DOCUMENT LOADS ENDING
+            console.log(data);
+            $('#id_gallery_name span').text(data.name);
+            $('#id_gallery_owner span').text(data.owner);
+            
+            $(data.images).each(function(i,item) {
+                console.log(item);
+                console.log(item.image);
 
-        function ajaxPopulateGallery(){
-
-            console.log("Gallery detail url: " + gallery_detail_url);
+                $("<div/>").attr({"class":"iNc","style":"width:100%;height:60vh;"}).html(
+                    $("<div/>").attr({"class":"iNc__image-container","style":"display:inline-block;width:60%;height:100%;"}).html(
+                        $("<figure/>").attr({"style":"height:100%;"}).html(
+                            $("<img/>").attr({"class":"img-responsive  img-fit-cover img-gallery", "style":"width:100%;max-height: 93%;", "src":item.image}).add($("<figcaption/>").attr({"class":"figure-caption text-center"}).text(item.name))
+                        )
+                    ).add(
+                        $("<div/>").attr({"class":"inc__comment-section", "style":"float:right;width:40%; height:100%;padding-top:10px;"}).html(
+                            $('<h3/>').attr({"class":"inc__comment-section-header", "style":"width:max-content;margin:0 auto;"}).text("Comments").add(
+                            $('<div/>').attr({"class":"inc__comment-section-comment-list","id":"id_comment_list_img_"+item.id, "style":"padding:15px 20px;overflow-y: auto;height:50vh;"}))
+                        )
+                    )
+                ).appendTo('#id_gallery_image_list');
+            });
+                
             $.ajax({
                 dataType : "json",
-                url: gallery_detail_url,
+                url: comment_list_url,
                 method: "GET",
-                data: {id:"id", name:"name", images:"images", owner:"owner"},
+                data: {id:"id", owner:"owner", image:"image", comment_text:"comment_text", created_at:"created_at", modified_at:"created_at" },
                 beforeSend: function(request) {
                     if(g_auth) {
                         request.setRequestHeader("Authorization", "Token " + g_auth.key);
                     }
                 }
             }).done(function(data) {
-                
-                console.log(data);
-                $('#id_gallery_name span').text(data.name);
-                $('#id_gallery_owner span').text(data.owner);
-                
-                $(data.images).each(function(i,item) {
-                    console.log(item);
-                    console.log(item.image);
-
-                    $("<div/>").attr({"class":"iNc","style":"width:100%;height:60vh;"}).html(
-                        $("<div/>").attr({"class":"iNc__image-container","style":"display:inline-block;width:60%;height:100%;"}).html(
-                            $("<figure/>").attr({"style":"height:100%;"}).html(
-                                $("<img/>").attr({"class":"img-responsive  img-fit-cover img-gallery", "style":"width:100%;max-height: 93%;", "src":item.image}).add($("<figcaption/>").attr({"class":"figure-caption text-center"}).text(item.name))
-                            )
-                        ).add(
-                            $("<div/>").attr({"class":"inc__comment-section", "style":"float:right;width:40%; height:100%;padding-top:10px;"}).html(
-                                $('<h3/>').attr({"class":"inc__comment-section-header", "style":"width:max-content;margin:0 auto;"}).text("Comments").add(
-                                $('<div/>').attr({"class":"inc__comment-section-comment-list","id":"id_comment_list_img_"+item.id, "style":"padding:15px 20px;overflow-y: auto;height:50vh;"}))
+                $(data).each(function(i,item) {
+                    var dot_index = item.created_at.lastIndexOf(".");
+                    var date = item.created_at.substr(0,dot_index);
+                    date = date.replace(/T/g, ' ');
+                    console.log(date);
+                    console.log("COMMENT")
+                    console.log(item.comment_text);
+                    $("<div/>").attr({"class":"inc__comment-section-comment"}).html(
+                        $("<p/>").attr("class","inc__comment-section-comment-text").text(item.comment_text).add(
+                            $("<p/>").attr({"class":"inc__comment-section-posted-by","style":"font-style: italic;width:max-content;margin-left:auto;margin-bottom:0px;"}).text("posted by "+item.owner).add(
+                                $("<p/>").attr({"class":"inc__comment-section-created_at","style":"font-style: italic;width:max-content;margin-left:auto;"}).text("created at "+date)
                             )
                         )
-                    ).appendTo('#id_gallery_image_list');
-                });
-                   
-                $.ajax({
-                    dataType : "json",
-                    url: comment_list_url,
-                    method: "GET",
-                    data: {id:"id", owner:"owner", image:"image", comment_text:"comment_text", created_at:"created_at", modified_at:"created_at" },
-                    beforeSend: function(request) {
-                        if(g_auth) {
-                            request.setRequestHeader("Authorization", "Token " + g_auth.key);
-                        }
-                    }
-                }).done(function(data) {
-                    $(data).each(function(i,item) {
-                        var dot_index = item.created_at.lastIndexOf(".");
-                        var date = item.created_at.substr(0,dot_index);
-                        date = date.replace(/T/g, ' ');
-                        console.log(date);
-                        console.log("COMMENT")
-                        console.log(item.comment_text);
-                        $("<div/>").attr({"class":"inc__comment-section-comment"}).html(
-                            $("<p/>").attr("class","inc__comment-section-comment-text").text(item.comment_text).add(
-                                $("<p/>").attr({"class":"inc__comment-section-posted-by","style":"font-style: italic;width:max-content;margin-left:auto;margin-bottom:0px;"}).text("posted by "+item.owner).add(
-                                    $("<p/>").attr({"class":"inc__comment-section-created_at","style":"font-style: italic;width:max-content;margin-left:auto;"}).text("created at "+date)
-                                )
-                            )
-                        ).appendTo('#id_comment_list_img_'+item.image);
-                       
-                        
-                    });
-                }).fail(function(data) {
-                    console.log("Failed to retrieve comments! Response: " + data.responseText + " (status: " + data.status+")")
-                });
+                    ).appendTo('#id_comment_list_img_'+item.image);
                     
-                   
-                    // // console.log(my_username);
-                    // if(item.owner==my_username){
-                    //     $("<li/>").attr("class","item item_gallery").html($("<a>").attr("href",window.location.href+item.id).text(item.name)).appendTo('#id_my_galleries_list');
-                    // }
-                    // else{
-                    //     $("<li/>").attr("class","item item_gallery").html($("<a>").attr("href",window.location.href+item.id).text(item.name)).appendTo('#id_other_galleries_list');
-                    // }
-                
-                $('#id_get_gallery_detail_response').html("<span class='label label-success'>Ok! Response: " + JSON.stringify(data));
+                    
+                });
             }).fail(function(data) {
-                $(".gallery").hide();
-                $('#id_get_gallery_detail_response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
+                console.log("Failed to retrieve comments! Response: " + data.responseText + " (status: " + data.status+")")
             });
-        }
-    </script>
-</body>
-</html>
+                
+                
+                // // console.log(my_username);
+                // if(item.owner==my_username){
+                //     $("<li/>").attr("class","item item_gallery").html($("<a>").attr("href",window.location.href+item.id).text(item.name)).appendTo('#id_my_galleries_list');
+                // }
+                // else{
+                //     $("<li/>").attr("class","item item_gallery").html($("<a>").attr("href",window.location.href+item.id).text(item.name)).appendTo('#id_other_galleries_list');
+                // }
+            
+            $('#id_get_gallery_detail_response').html("<span class='label label-success'>Ok! Response: " + JSON.stringify(data));
+        }).fail(function(data) {
+            $(".gallery").hide();
+            $('#id_get_gallery_detail_response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
+        });
+    }
+</script>
+{% endblock %}
