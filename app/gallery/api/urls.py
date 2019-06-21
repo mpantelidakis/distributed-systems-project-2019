@@ -14,7 +14,8 @@ from . import views
 # actions in our viewset
 router = DefaultRouter()
 router.register('tags', views.TagViewSet)
-router.register('images', views.ImageViewSet)
+# the following wouldn't work without a base_name
+router.register('images', views.ImageViewSet, base_name='image')
 router.register('galleries', views.GalleryViewSet)
 
 app_name = 'gallery-api'

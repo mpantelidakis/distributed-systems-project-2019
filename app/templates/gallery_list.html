@@ -62,7 +62,7 @@
     <div class="modal-container">
         <div class="modal-header">
             <a href="#close" class="btn btn-clear float-right close-modal" aria-label="Close"></a>
-            <div class="modal-title h5">Rename your gallery</div>
+            <div class="modal-title h5">Modify your gallery</div>
         </div>
         <div class="modal-body">
             <div class="content">
@@ -91,44 +91,14 @@
     var g_urls = {
         'galleries_url': "{% url 'gallery-api:gallery-list' %}",
     };
-    var g_auth = localStorage.getItem("auth");
-    if(g_auth == null) {
-        g_auth = sessionStorage.getItem("auth");
-    }
-    
-    if(g_auth) {
-        try {
-            g_auth = JSON.parse(g_auth);
-            var my_username = g_auth.username;
-            var myProfileSlag = my_username.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
-            var my_profile_url = "/api/friends/profiles/" + myProfileSlag +'/';
-        } catch(error) {
-            g_auth = null; 
-        }
-    }
-
-    var getCookie = function(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    };
+    var token = getToken();
     var g_csrftoken = getCookie('csrftoken');
 
     $(document).ready(function(){ 
 
         //Neat for development, since we know the token for the headers, testing the API
-        if(g_auth){
-            console.log(g_auth);
+        if(token){
+            console.log(token);
             ajaxPopulateGalleries();
         }
         else{
@@ -163,8 +133,8 @@
                     csrfmiddlewaretoken: g_csrftoken
                 },
                 beforeSend: function(request) {
-                    if(g_auth) {
-                        request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                    if(token) {
+                        request.setRequestHeader("Authorization", "Token " + token.key);
                     }
                 }
             }).done(function(data) {
@@ -200,8 +170,8 @@
             method: "GET",
             data: {id:"id", name:"name", num_images:"number_of_images", owner:"owner"},
             beforeSend: function(request) {
-                if(g_auth) {
-                    request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                if(token) {
+                    request.setRequestHeader("Authorization", "Token " + token.key);
                 }
             }
         }).done(function(data) {
@@ -212,8 +182,8 @@
         
             $(data).each(function(i,item) {
                 // console.log(item.owner);
-                // console.log(my_username);
-                if(item.owner==my_username){
+                // console.log(token.username);
+                if(item.owner==token.username){
                     $("<li/>").attr({"class":"item item_gallery","style":"padding-left:15px;list-style:none;margin-bottom:15px;"}).html(
                         $("<a>").attr("href",url+item.id).text(item.name).add(
                             $("<button/>").attr({"name":item.name, "value": item.id, "class": "btn btn_delete_gallery btn-error btn-sm","style":"margin-left:20px;"}).text("Delete").add(
@@ -248,8 +218,8 @@ $('#id_my_galleries_list').on('click', '.btn_delete_gallery', function(){
         url: url,
         method: "DELETE",
         beforeSend: function(request) {
-            if(g_auth) {
-                request.setRequestHeader("Authorization", "Token " + g_auth.key);
+            if(token) {
+                request.setRequestHeader("Authorization", "Token " + token.key);
             }
         }
     }).done(function() {
@@ -295,8 +265,8 @@ $('#id_edit_gallery_done_button').click(function() {
             method: "PUT", 
             data: {name: gallery_name},
             beforeSend: function(request) {
-                if(g_auth) {
-                    request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                if(token) {
+                    request.setRequestHeader("Authorization", "Token " + token.key);
                 }
             }
         }).done(function(data) {

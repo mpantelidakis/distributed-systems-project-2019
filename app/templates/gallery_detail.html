@@ -9,8 +9,10 @@
 <div class="gallery">
     <h3 class="gallery__header gallery__header--h3">Gallery Details:</h3>
     <div class="gallery__details">
+        <p class="gallery__details-field" id=id_gallery_id></p>
         <p class="gallery__details-field" id=id_gallery_name>Name:&nbsp;<span></span></p>
         <p class="gallery__details-field" id=id_gallery_owner>Owner:&nbsp;<span></span></p>
+        
     </div>
     
     <h2 class="gallery__header gallery__header--h2">Images:</h2>
@@ -19,6 +21,11 @@
     </div>
 </div>
 
+
+
+<div class='column col-3'>
+    <button class="btn btn-primary" id='id_open_upload_modal' >Upload an image</button>
+</div>
 
 <div class='column col-3'>
     <a class="btn btn-primary" href='{% url "gallery:list" %}'>Back to gallery list</a>
@@ -29,63 +36,74 @@
 <div class='column col-3'>
     <a class="btn btn-primary" href='{% url "home" %}'>Back to home page</a>
 </div>
+
+
+
+<div class="modal" id="id_upload_image_modal">
+    <a href="#close" class="modal-overlay close-modal" aria-label="Close"></a>
+    <div class="modal-container">
+        <div class="modal-header">
+            <a href="#close" class="btn btn-clear float-right close-modal" aria-label="Close"></a>
+            <div class="modal-title h5">Upload an image</div>
+        </div>
+        <div class="modal-body">
+            <div class="content">
+                <form  method="post"  id="id_img_upload_form" action="" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="form-label" for="id_input_image_name">Name</label>
+                        <input class="form-input" type="text" name="name" id="id_input_image_name" placeholder="Name">
+
+                        <label class="form-label" for="id_input_gallery_id">Gallery ID</label>
+                        <input class="form-input" type="text" name="gallery" id="id_input_gallery_id" readonly>
+
+                        <label class="form-label" for="id_input_image">Select an image:</label>
+                        <input class="form-input" type="file" id="id_input_image" name="img_to_upload" accept="image/*">
+                    </div>
+                    <div class="modal-footer">
+                        <input class="btn btn-primary" type="submit" value="Upload">
+                        <a href="#close" class="btn close-modal" >Close</a>
+                    </div>
+                </form>
+                <progress></progress>
+                <div class='label label-error mt-1 d-invisible' id='id_modal_error'>
+                    Failed to upload the image!
+                </div>
+            </div>
+        </div>
+       
+    </div>
+</div>
+
 {% endblock %}
   
 {% block javascript %}
 <script>
+
     var gallery_get_url = function() {
         url = window.location.href
-        first_index = url.lastIndexOf("/");
-        second_index = url.lastIndexOf("/",first_index-1)
-        pk = url.substr(second_index+1);
-        pk = pk.replace("/",'');
+        pk = url.split('/')[4];
         console.log(pk);
         var url_mask = "{% url 'gallery-api:gallery-detail' pk=1337 %}".replace(/1337/, pk.toString());
         return url_mask;
     };
 
+    
+ 
+    var upload_image_url = "{% url 'gallery-api:image-list' %}";
+
     var gallery_detail_url = gallery_get_url();
     var comment_list_url = "{% url 'comment-api:comment-list'%}";
         
 
-    var g_auth = localStorage.getItem("auth");
-    if(g_auth == null) {
-        g_auth = sessionStorage.getItem("auth");
-    }
-    
-    if(g_auth) {
-        try {
-            g_auth = JSON.parse(g_auth);
-            var my_username = g_auth.username;
-            var myProfileSlag = my_username.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
-            var my_profile_url = "/api/friends/profiles/" + myProfileSlag +'/';
-        } catch(error) {
-            g_auth = null; 
-        }
-    }
-
-    var getCookie = function(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    };
+    var token = getToken();
     var g_csrftoken = getCookie('csrftoken');
 
     $(document).ready(function(){ 
 
         //Neat for development, since we know the token for the headers, testing the API
-        if(g_auth){
-            console.log(g_auth);
+        if(token){
+            console.log(token);
             ajaxPopulateGallery();
         }
         else{
@@ -104,15 +122,17 @@
             method: "GET",
             data: {id:"id", name:"name", images:"images", owner:"owner"},
             beforeSend: function(request) {
-                if(g_auth) {
-                    request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                if(token) {
+                    request.setRequestHeader("Authorization", "Token " + token.key);
                 }
             }
         }).done(function(data) {
             
             console.log(data);
+            
             $('#id_gallery_name span').text(data.name);
             $('#id_gallery_owner span').text(data.owner);
+            $('#id_gallery_id').text(data.id);
             
             $(data.images).each(function(i,item) {
                 console.log(item);
@@ -138,8 +158,8 @@
                 method: "GET",
                 data: {id:"id", owner:"owner", image:"image", comment_text:"comment_text", created_at:"created_at", modified_at:"created_at" },
                 beforeSend: function(request) {
-                    if(g_auth) {
-                        request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                    if(token) {
+                        request.setRequestHeader("Authorization", "Token " + token.key);
                     }
                 }
             }).done(function(data) {
@@ -179,5 +199,96 @@
             $('#id_get_gallery_detail_response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
         });
     }
+
+
+    //Open and close upload image modal
+    $('#id_open_upload_modal').click(function() {
+        $('#id_upload_image_modal').addClass('active');
+        $('#id_input_gallery_id').val($('#id_gallery_id').text());
+    });
+
+    $('#id_upload_image_modal .close-modal').click(function() {
+        $('#id_upload_image_modal').removeClass('active');
+    });
+
+    //Upload button functionaloty
+    $("#id_img_upload_form").on('submit',(function(e) {
+        e.preventDefault();
+    
+        var gallery_name = $('#id_gallery_name').text();
+        var gallery_id = $('#id_gallery_id').text();
+        var image_name = $('#id_input_image_name').val();
+        var image = $('#id_input_image').val();
+
+        //error_checking
+        if(image_name){
+
+            if(image){
+                $('#id_modal_error').addClass('d-invisible');
+            }
+            else{
+                $('#id_modal_error').text('The image field is incorrect');
+                $('#id_modal_error').removeClass('d-invisible');
+            }
+        }
+        else{
+            $('#id_modal_error').text('Please type a name for your image');
+            $('#id_modal_error').removeClass('d-invisible');
+        }
+        //end error_checking
+
+        
+        if(gallery_id && image_name && image) {
+
+    
+            var formData = new FormData(this);
+            formData.append('image', $('input[type=file]')[0].files[0]); 
+
+            console.log('Gallery to upload to: ' + gallery_name);
+            console.log('New image name: ' + image_name);
+            console.log('upload url: ' + upload_image_url);
+            console.log('Image to upload: ' + image);
+            console.log('gallery primary key: ' + gallery_id);
+
+            console.log('Uploading...');
+            
+            $.ajax({
+               
+                url: upload_image_url,
+                type: "POST",
+                data:  formData,
+                contentType: false,
+                cache: false,
+                processData:false,
+            
+                beforeSend: function(request) {
+                    if(token) {
+                        request.setRequestHeader("Authorization", "Token " + token.key);
+                    }
+                },
+                xhr: function () {
+                    var myXhr = $.ajaxSettings.xhr();
+                    if (myXhr.upload) {
+                        // For handling the progress of the upload
+                        myXhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            $('progress').attr({
+                            value: e.loaded,
+                            max: e.total,
+                            });
+                        }
+                        }, false);
+                    }
+                    return myXhr;
+                }
+            }).done(function(data) {
+               console.log("Uploaded!!");
+                    
+            }).fail(function(data) {
+                console.log("Failed to upload the image! Response: " + data.responseText + " (status: " + data.status+")")
+            });
+
+        }
+    }));
 </script>
 {% endblock %}

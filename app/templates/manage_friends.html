@@ -27,43 +27,19 @@
     var g_urls = {
         'available_profiles': "{% url 'friends-api:profile-list' %}",
     };
-    var g_auth = localStorage.getItem("auth");
-    if(g_auth == null) {
-        g_auth = sessionStorage.getItem("auth");
-    }
-    
-    if(g_auth) {
-        try {
-            g_auth = JSON.parse(g_auth);
-            var myProfileSlag = g_auth.username.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
-            var my_profile_url = "/api/friends/profiles/" + myProfileSlag +'/';
-        } catch(error) {
-            g_auth = null; 
-        }
-    }
-
-    var getCookie = function(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    };
+    var token = getToken();
     var g_csrftoken = getCookie('csrftoken');
 
+    if(token) {
+        var myProfileSlag = token.username.replace(/[^a-z0-9\s]/gi, '').replace(/[@\s]/g, '');
+        var my_profile_url = "/api/friends/profiles/" + myProfileSlag +'/';
+    }
+   
     $(document).ready(function(){ 
 
         //Neat for development, since we know the token for the headers, testing the API
-        if(g_auth){
-            console.log(g_auth);
+        if(token){
+            console.log(token);
             ajaxPopulateFriends();
         }
         else{
@@ -81,8 +57,8 @@
             method: "GET",
             data: {friends:"friends"},
             beforeSend: function(request) {
-                if(g_auth) {
-                    request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                if(token) {
+                    request.setRequestHeader("Authorization", "Token " + token.key);
                 }
             }
         }).done(function(data) {
@@ -109,8 +85,8 @@
             url: g_urls.available_profiles, 
             method: "GET",
             beforeSend: function(request) {
-                if(g_auth) {
-                    request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                if(token) {
+                    request.setRequestHeader("Authorization", "Token " + token.key);
                 }
             },
         }).done(function(data) {
@@ -156,8 +132,8 @@
                 method: "GET",
                 data:{friends: "friends"},
                 beforeSend: function(request) {
-                    if(g_auth) {
-                        request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                    if(token) {
+                        request.setRequestHeader("Authorization", "Token " + token.key);
                     }
                 }
             }).done(function(data) {
@@ -175,8 +151,8 @@
                         method: "PUT",
                         data: data,
                         beforeSend: function(request) {
-                            if(g_auth) {
-                                request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                            if(token) {
+                                request.setRequestHeader("Authorization", "Token " + token.key);
                             }
                         }
                     }).done(function(data) {
@@ -230,8 +206,8 @@
             method: "GET",
             data:{friends: "friends"},
             beforeSend: function(request) {
-                if(g_auth) {
-                    request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                if(token) {
+                    request.setRequestHeader("Authorization", "Token " + token.key);
                 }
             }
         }).done(function(data) {
@@ -255,8 +231,8 @@
                     method: "PUT",
                     data: data,
                     beforeSend: function(request) {
-                        if(g_auth) {
-                            request.setRequestHeader("Authorization", "Token " + g_auth.key);
+                        if(token) {
+                            request.setRequestHeader("Authorization", "Token " + token.key);
                         }
                     }
                 }).done(function(data) {

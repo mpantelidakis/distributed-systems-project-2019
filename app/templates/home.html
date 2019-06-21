@@ -132,184 +132,84 @@
 {% endblock %}
     
 {% block javascript %}
-    <script>
-        var g_urls = {
-            'signup': '{% url "user-api:create" %}',
-            'login': '{% url "rest_login" %}',
-            'logout': '{% url "rest_logout" %}',
-            'test_auth': '{% url "test_auth" %}',
-        };
-        var g_auth = localStorage.getItem("auth");
-        if(g_auth == null) {
-            g_auth = sessionStorage.getItem("auth");
+<script>
+    var g_urls = {
+        'signup': '{% url "user-api:create" %}',
+        'login': '{% url "rest_login" %}',
+        'logout': '{% url "rest_logout" %}',
+        'test_auth': '{% url "test_auth" %}',
+    };
+    var g_csrftoken = getCookie('csrftoken');
+
+    var token = getToken();
+
+    var checkIfLoggedIn = function() {
+        if(token) {
+            $('#non-logged-in').hide();
+            $('#logged-in').show();
+            $('#span-username').html(token.username);
+        } else {
+            $('#non-logged-in').show();
+            $('#logged-in').hide();
+            $('#span-username').html('');
         }
-        
-        if(g_auth) {
-            try {
-                g_auth = JSON.parse(g_auth);
-            } catch(error) {
-                g_auth = null; 
-            }
-        }
+        $('#test-auth-response').html("");
+    };
 
-        var getCookie = function(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = jQuery.trim(cookies[i]);
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
+    $(document).ready(function () {
+        checkIfLoggedIn(); 
+    });
+
+    $('#id_login_button').click(function() {
+        $('#id_login_modal').addClass('active');
+    });
+    
+    $('#id_login_modal .close-modal').click(function() {
+        $('#id_login_modal').removeClass('active');
+    });
+
+    $('#id_sign_up_button').click(function() {
+        $('#id_sign_up_modal').addClass('active');
+    });
+    
+    $('#id_sign_up_modal .close-modal').click(function() {
+        $('#id_sign_up_modal').removeClass('active');
+    });
+
+
+    $('#id_test_auth_button').click(function() {
+        $.ajax({
+            url: g_urls.test_auth, 
+            method: "GET", 
+            beforeSend: function(request) {
+                if(token) {
+                    request.setRequestHeader("Authorization", "Token " + token.key);
                 }
             }
-            return cookieValue;
-        };
-        var g_csrftoken = getCookie('csrftoken');
-
-        var initLogin = function() {
-            if(g_auth) {
-                $('#non-logged-in').hide();
-                $('#logged-in').show();
-                $('#span-username').html(g_auth.username);
-                if(g_auth.remember_me) {
-                    localStorage.setItem("auth", JSON.stringify(g_auth));
-                } else {
-                    sessionStorage.setItem("auth", JSON.stringify(g_auth));
-                }
-            } else {
-                $('#non-logged-in').show();
-                $('#logged-in').hide();
-                $('#span-username').html('');
-                localStorage.removeItem("auth");
-                sessionStorage.removeItem("auth");
-            }
-            $('#test-auth-response').html("");
-        };
-
-        $(function () {
-            initLogin(); 
-
-            $('#id_login_button').click(function() {
-                $('#id_login_modal').addClass('active');
-            });
-            
-            $('#id_login_modal .close-modal').click(function() {
-                $('#id_login_modal').removeClass('active');
-            });
-
-            $('#id_sign_up_button').click(function() {
-                $('#id_sign_up_modal').addClass('active');
-            });
-            
-            $('#id_sign_up_modal .close-modal').click(function() {
-                $('#id_sign_up_modal').removeClass('active');
-            });
-
-
-            $('#id_test_auth_button').click(function() {
-                $.ajax({
-                    url: g_urls.test_auth, 
-                    method: "GET", 
-                    beforeSend: function(request) {
-                        if(g_auth) {
-                            request.setRequestHeader("Authorization", "Token " + g_auth.key);
-                        }
-                    }
-                }).done(function(data) {
-                    $('#test-auth-response').html("<span class='label label-success'>Ok! Response: " + data);
-                }).fail(function(data) {
-                    $('#test-auth-response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
-                });
-            });
-            
-            $('#id_login_ok_button').click(function() {
-                var username = $('#id_login_input_email').val();
-                var password = $('#id_login_input_password').val();
-                var remember_me = $('#input-local-storage').prop('checked');
-                if(username && password) {
-                    console.log("Will try to login with ", username, password);
-                    $('#id_login_modal_error').addClass('d-invisible');
-                    $.ajax({
-                        url: g_urls.login, 
-                        method: "POST", 
-                        data: {
-                            username: username,
-                            password: password,
-                            csrfmiddlewaretoken: g_csrftoken
-                        }
-                    }).done(function(data) {
-                        console.log("DONE: ", username, data.key);
-                        g_auth = {
-                            username: username,
-                            key: data.key,
-                            remember_me: remember_me
-                        };
-                        $('#id_login_modal').removeClass('active');
-                        initLogin();
-                        // CAREFUL! csrf token is rotated after login: https://docs.djangoproject.com/en/1.7/releases/1.5.2/#bugfixes
-                        g_csrftoken = getCookie('csrftoken');
-                    }).fail(function(data) {
-                        console.log("FAIL", data);
-                        $('#id_login_modal_error').removeClass('d-invisible').text(data.responseText);
-                    });
-                } else {
-                    $('#id_login_modal_error').removeClass('d-invisible');
-                }
-            });
-
-            $('#id_sign_up_ok_button').click(function() {
-                var email = $('#id_sign_up_input_email').val();
-                var password = $('#id_sign_up_input_password').val();
-                var name = $('#id_sign_up_input_username').val();
-                if(email && password && name) {
-                    console.log("Will try to create an account with credentials: "+email+password+name);
-                    $('#id_sign_up_modal_error').addClass('d-invisible');
-                    $.ajax({
-                        url: g_urls.signup, 
-                        method: "POST", 
-                        data: {
-                            email: email,
-                            password: password,
-                            name: name,
-                            csrfmiddlewaretoken: g_csrftoken
-                        }
-                    }).done(function(data) {
-                        console.log("DONE: ", data);
-                        $('#id_sign_up_modal').removeClass('active');
-                    }).fail(function(data) {
-                        console.log("FAIL", data);
-                        $('#id_sign_up_modal_error').removeClass('d-invisible').text(data.responseText);
-                    });
-                } else {
-                    $('#id_sign_up_modal_error').removeClass('d-invisible');
-                }
-            });
-
-            $('#id_logout_button').click(function() {
-                console.log("Trying to logout");
-                $.ajax({
-                    url: g_urls.logout, 
-                    method: "POST", 
-                    beforeSend: function(request) {
-                        request.setRequestHeader("Authorization", "Token " + g_auth.key);
-                    },
-                    data: {
-                        csrfmiddlewaretoken: g_csrftoken
-                    }
-                }).done(function(data) {
-                    console.log("DONE: ", data);
-                    g_auth = null;
-                    initLogin();
-                }).fail(function(data) {
-                    console.log("FAIL: ", data);
-                });
-            });
-            
-
+        }).done(function(data) {
+            $('#test-auth-response').html("<span class='label label-success'>Ok! Response: " + data);
+        }).fail(function(data) {
+            $('#test-auth-response').html("<span class='label label-error'>Fail! Response: " + data.responseText + " (status: " + data.status+")</span>");
         });
+    });
+    
+    $('#id_login_ok_button').click(function() {
+        let username = $('#id_login_input_email').val();
+        let password = $('#id_login_input_password').val();
+        let remember_me = $('#input-local-storage').prop('checked');
+        Ajaxlogin(username, password, remember_me, g_urls.login );
+    });
+
+    $('#id_sign_up_ok_button').click(function() {
+        let email = $('#id_sign_up_input_email').val();
+        let password = $('#id_sign_up_input_password').val();
+        let name = $('#id_sign_up_input_username').val();
+        Ajaxsignup(email, password, name, g_urls.signup);
+    });
+
+    $('#id_logout_button').click(function() {
+        Ajaxlogout(g_urls.logout);
+    });
         
-    </script>
+</script>
 {% endblock %}
