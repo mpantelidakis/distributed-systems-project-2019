@@ -6,6 +6,10 @@
 <div id="id_login_required"></div>
 <div id='id_get_gallery_detail_response' class="api_response"></div>
 
+<div class='column col-3'>
+    <button class="btn btn-primary" id='id_open_upload_modal' >Upload an image</button>
+</div>
+    
 <div class="gallery">
     <h3 class="gallery__header gallery__header--h3">Gallery Details:</h3>
     <div class="gallery__details">
@@ -19,12 +23,6 @@
     <div class="gallery__image-list" id="id_gallery_image_list" style="max-width:1400px;min-width:900px;margin:0 auto;">
 
     </div>
-</div>
-
-
-
-<div class='column col-3'>
-    <button class="btn btn-primary" id='id_open_upload_modal' >Upload an image</button>
 </div>
 
 <div class='column col-3'>
@@ -65,13 +63,40 @@
                         <a href="#close" class="btn close-modal" >Close</a>
                     </div>
                 </form>
-                <progress></progress>
                 <div class='label label-error mt-1 d-invisible' id='id_modal_error'>
                     Failed to upload the image!
                 </div>
             </div>
         </div>
        
+    </div>
+</div>
+
+<div class="modal" id="id_comment_modal">
+    <a href="#close" class="modal-overlay close-modal" aria-label="Close"></a>
+    <div class="modal-container">
+        <div class="modal-header">
+            <a href="#close" class="btn btn-clear float-right close-modal" aria-label="Close"></a>
+            <div class="modal-title h5">Please drop your comment below</div>
+        </div>
+        <div class="modal-body">
+            <div class="content">
+                <form id="id_comment_form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="form-label" for="id_comment_text">Comment:</label>
+                        <textarea id="id_comment_text" form="id_comment_form" maxlength="1024" cols="74" rows ="8" placeholder="Write your comment here.."></textarea>
+                    </div>
+                </form>
+                <div class='label label-error mt-1 d-invisible' id='id_edit_modal_error'>
+                    Failed to post your comment!
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" id='id_submit_comment_btn' >Ok!</button>
+            <a href="#close" class="btn close-modal" >Close</a>
+        </div>
     </div>
 </div>
 
@@ -138,6 +163,9 @@
                 console.log(item);
                 console.log(item.image);
 
+                
+                $("<button/>").attr({"class":"btn btn-primary btn_comment","value": item.id}).text("Add a comment").appendTo('#id_gallery_image_list');
+                
                 $("<div/>").attr({"class":"iNc","style":"width:100%;height:60vh;"}).html(
                     $("<div/>").attr({"class":"iNc__image-container","style":"display:inline-block;width:60%;height:100%;"}).html(
                         $("<figure/>").attr({"style":"height:100%;"}).html(
@@ -210,6 +238,52 @@
     $('#id_upload_image_modal .close-modal').click(function() {
         $('#id_upload_image_modal').removeClass('active');
     });
+    //
+
+
+    //Open and close comment modal
+    $('#id_gallery_image_list').on('click', '.btn_comment', function(){
+        $('#id_comment_modal').addClass('active');
+        $('#id_submit_comment_btn').val($(this).val());
+    });
+
+    $('#id_comment_modal .close-modal').click(function() {
+        $('#id_comment_modal').removeClass('active');
+    });
+    //
+
+    //Post a comment functionality
+    $('#id_submit_comment_btn').click(function() {
+        var img_id = $(this).val();
+        var text = $('#id_comment_text').val();
+        // console.log("ID: " + img_id);
+        // console.log("Text: " + text);
+
+        $.ajax({
+                    
+            url: comment_list_url,
+            type: "POST",
+            data: {
+                image: img_id,
+                comment_text: text,
+                csrfmiddlewaretoken: g_csrftoken
+            },
+        
+            beforeSend: function(request) {
+                if(token) {
+                    request.setRequestHeader("Authorization", "Token " + token.key);
+                }
+            },
+        }).done(function(data) {
+                console.log("Comment posted!!");
+                $('#id_comment_modal').removeClass('active');
+                location.reload();
+                    
+        }).fail(function(data) {
+                console.log("Failed to post the comment! Response: " + data.responseText + " (status: " + data.status+")")
+        });
+    });
+    //
 
     //Upload button functionaloty
     $("#id_img_upload_form").on('submit',(function(e) {
@@ -266,23 +340,10 @@
                         request.setRequestHeader("Authorization", "Token " + token.key);
                     }
                 },
-                xhr: function () {
-                    var myXhr = $.ajaxSettings.xhr();
-                    if (myXhr.upload) {
-                        // For handling the progress of the upload
-                        myXhr.upload.addEventListener('progress', function (e) {
-                        if (e.lengthComputable) {
-                            $('progress').attr({
-                            value: e.loaded,
-                            max: e.total,
-                            });
-                        }
-                        }, false);
-                    }
-                    return myXhr;
-                }
             }).done(function(data) {
                console.log("Uploaded!!");
+               $('#id_upload_image_modal').removeClass('active');
+               location.reload();
                     
             }).fail(function(data) {
                 console.log("Failed to upload the image! Response: " + data.responseText + " (status: " + data.status+")")
