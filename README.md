@@ -1,6 +1,6 @@
 # distributed-systems-project-2019
 
-## Docker environment implementing an ecosystem consisting of nginx, django, zookeeper and a postgres db.
+## Docker environment implementing an ecosystem consisting of nginx, djangoand a postgres db.
 
 clone the repository,
 add the .env and .env.db files to the root folder
